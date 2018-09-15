@@ -37,6 +37,16 @@ export class ThreeEngine {
 		camera.position.set(0, 0, 50);
 		camera.lookAt(0, 0, 0);
 
+        let floorTexture = new THREE.TextureLoader().load( './img/checkerboard.jpg' );
+        floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+        floorTexture.repeat.set( 5, 5 );
+        let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+        let floorGeometry = new THREE.PlaneGeometry(25, 25, 10, 10);
+        let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.position.z = -0.5;
+        // floor.rotation.x = Math.PI / 2;
+        scene.add(floor);
+
 		let kbd = new KeyboardState();
 
 		// freeze tools for speedup
@@ -81,9 +91,8 @@ export class ThreeEngine {
 
 	objectsTweens () {
 		// TWEEN.update();
-		this.tweens.forEach( (tween) => {
-			tween.update();
-			
+		this.tweens.forEach( (tweens, object) => {
+			tweens.forEach( (tween ) => {tween.update()});
 		});
 	}
 
@@ -129,7 +138,9 @@ export class ThreeEngine {
 		tween.easing(TWEEN.Easing.Elastic.InOut);
 		tween.start();
 
-		this.tweens.set(object, tween);
+		if( !this.tweens.has(object) )
+			this.tweens.set(object, new Set());
+		this.tweens.get(object).add(tween);
 	}
 
 	movePlayer () {
@@ -143,31 +154,48 @@ export class ThreeEngine {
         	return false;
 
         let playerObject = this.objects.get(this.playerGameObject);
+        let playerCurrentTweens = this.tweens.get(playerObject);
+        if( playerCurrentTweens )
+            playerCurrentTweens.forEach( (tween ) => {tween.stop()});
         // let direction = playerObject.getWorldPosition();
-        // let moveForwardMatrix = new THREE.Matrix4().makeTranslation(0, 1, 0);
-        let distance = 10*this.delta;
-        // let newPosition = playerObject.position.clone();
+
+        // calculate distance for single player move
+		//TODO: It related to outfit weight, agility and other player stats
+        let speed = 0.9;// distance that object take per delta
+
+        // calculate move vector
         let x = 0, y = 0, z = 0;
-        if (kbd.pressed("W")){
-            y = 1;
-        }
-        if( kbd.pressed("A") ) {
-            x = -1;
-        }
-        if(  kbd.pressed("S") ) {
-            y = -1;
-        }
-        if ( kbd.pressed("D") ) {
-            x = 1;
-        }
-        playerObject.translateOnAxis({x, y, z}, distance);
-        console.log(playerObject.position);
-        // object.getMatrix().multiplyMatrices(moveForwardMatrix, object.getMatrix())
+        if( kbd.pressed("W") ) y = 1;
+        if( kbd.pressed("A") ) x = -1;
+        if( kbd.pressed("S") ) y = -1;
+        if( kbd.pressed("D") ) x = 1;
 
-		//newPosition.add({x,y,z});
+        // let moveForwardMatrix = new THREE.Matrix4().makeTranslation(x, y, z);
+        // console.log(moveForwardMatrix);
+        // playerObject.translateOnAxis({x, y, z}, distance);
+        // console.log(playerObject.position);
+        // let moveMatrix = playerObject.matrix.multiplyMatrices(moveForwardMatrix, playerObject.matrix);
+        // playerObject.applyMatrix();
 
-		//this.moveGameObjectTo(this.playerGameObject, newPosition);
-    }
+		let startPosition = new THREE.Vector3(0,0,0);
+		let endPosition = new THREE.Vector3(x,y,z);
+        let tween = new TWEEN.Tween(startPosition).to(endPosition, this.delta);
+        tween.easing(TWEEN.Easing.Elastic.Out);
+        tween.start();
+        let obj = this;
+        // Every tick this function calls
+        tween.on('update', function(coords){
+        	// console.log(playerObject);
+            playerObject.translateOnAxis(coords, obj.delta*10);
+		});
+        tween.on('complete', function(){
+        	console.log('step!');
+		})
+
+        if( !this.tweens.has(playerObject) )
+            this.tweens.set(playerObject, new Set());
+        this.tweens.get(playerObject).add(tween);
+	}
 
     rotatePlayer () {
         if( this.playerGameObject === null )
@@ -185,10 +213,10 @@ export class ThreeEngine {
             playerObject.rotateZ(Math.PI*angle);
         if ( kbd.pressed("right") )
             playerObject.rotateZ(-Math.PI*angle);
-        if(  kbd.pressed("up") )
-            playerObject.rotateX(Math.PI*angle);
-        if(  kbd.pressed("down") )
-            playerObject.rotateX(Math.PI*angle);
+        // if(  kbd.pressed("up") )
+        //     playerObject.rotateX(Math.PI*angle);
+        // if(  kbd.pressed("down") )
+        //     playerObject.rotateX(-Math.PI*angle);
 	}
 
 	setupEventsHandlers () {
