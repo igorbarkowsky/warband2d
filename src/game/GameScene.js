@@ -1,6 +1,5 @@
 "use strict";
 
-import * as Utils from "./utils.js";
 import {Event} from "./Game.js";
 
 import {Party} from "./Party.js";
@@ -22,7 +21,7 @@ export class GameScene {
 			height, 
 			terrain, 
 			weather, 
-		}
+		};
 		Object.assign(this, sceneSettings);
 
 		this.objects = new Map();
@@ -50,13 +49,13 @@ export class GameScene {
 		Event.trigger('GameScene.moveObjectTo', objectKey, position);
 		// Check if we collision with another objects
 		let existsAtPosition = this.whoElseExistsAtPosition(position, objectKey);
-		if( existsAtPosition != [] ) {
+		if( existsAtPosition !== [] ) {
 			// Start autobattle if enemy
 			console.log("In this position we found somebody else, go to war with them!");
 			//TODO: convert code for battle with multiple parties on both sides
 			if( objectKey instanceof Party ) {
 				for( let existObject of existsAtPosition ) {
-					if( existObject instanceof Party && existObject.faction != objectKey.faction ) {
+					if( existObject instanceof Party && existObject.faction !== objectKey.faction ) {
 						Event.trigger('autocalc.battle', [objectKey], [existObject], this);
 					}
 				}				
@@ -74,7 +73,7 @@ export class GameScene {
 		let existsAtPosition = [];
 		for( let o of this.objects.keys() )
 		{
-			if( o == objectKey )
+			if( o === objectKey )
 				continue;
 
 			if( this.isObjectExistsAt(o, position) )

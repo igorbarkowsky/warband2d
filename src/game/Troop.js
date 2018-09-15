@@ -1,9 +1,6 @@
 "use strict";
 
-import * as Utils from "./utils.js";
-// import {Event as EventMixin} from "./mixins/Event.js";
 import {Event} from "./Game.js";
-import {Say as SayMixin} from "./mixins/Say.js";
 
 import {Unit} from "./Unit.js";
 import {NameGenerator} from './data/NameGenerator.js';
@@ -14,10 +11,14 @@ export class Troop extends Unit {
 
 		let {
 			type = 'support',
-		} = settings;
+            xp = 0,
+            lvl = 1,
+        } = settings;
 		let unitSettings = {
-			type, 
-		};
+			type,
+            xp,
+            lvl,
+        };
 		Object.assign(this, unitSettings);
 
 		// Generate normal name
@@ -47,7 +48,7 @@ export class Troop extends Unit {
 			trainer: 0, // Can train other units with lower lvl
 			tactic: 0, // Get unit advance in battles
 			pathfinder: 0, // Get more information from track, find better paths, increase speed on map
-			scout: 0, // Scounting and party seeing range
+			scout: 0, // Scouting and party seeing range
 			shipman: 0, // Experienced sailor and ship captain improve speed in sea travels
 			thief: 0, // Art of sneaking
 			trader: 0, // Better prices
@@ -72,7 +73,7 @@ export class Troop extends Unit {
 			firearms:0,
 		};
 
-		Event.trigger('Unit.created', this);
+		Event.trigger('Troop.Created', this);
 	}
 
 	setupEventsHandlers () {}

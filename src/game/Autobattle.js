@@ -1,11 +1,10 @@
 "use strict";
 
 import * as Utils from "./utils.js";
-import {Events} from "./mixins/Event.js";
+import {Event} from "./Game.js";
 
 export class Autobattle {
 	constructor (partiesFromSideA, partiesFromSideB, scene) {
-		Events(this).setupEventsHandlers();
 		// Battle parties. Each party choose one of battle sides
 		this.sides = {
 			A: partiesFromSideA,
@@ -22,7 +21,8 @@ export class Autobattle {
 			sidesPower[side] = 0;
 			for( let party of sideParties ) {
 				let partyPower = this.calculatePartyPower(party);
-				//TODO: More logic for relations between parties at one side. Modifiers for bad relations between leaders, different factions, both-hated troops like regular and mercenary
+				//TODO: More logic for relations between parties at one side.
+				//TODO: Modifiers for bad relations between leaders, different factions, both-hated troops like regular and mercenary
 				sidesPower[side] += partyPower;
 			}
 		}
@@ -105,6 +105,3 @@ export class Autobattle {
 
 	setupEventsHandlers () {}
 }
-
-// Utils.mixin(Autobattle, EventMixin);
-Events(Autobattle);
