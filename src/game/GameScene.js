@@ -7,18 +7,19 @@ import {Party} from "./Party.js";
 export class GameScene {
 
 	constructor (settings) {
-		
+		console.log('Create new game scene');
+
 		let {
 			title = 'Noname scene',
 			width = 100, 
-			height = 100, 
+			depth = 100,
 			terrain = 'plain', 
 			weather = 'sunny', 
 		} = settings;
 		let sceneSettings = {
 			title,
 			width, 
-			height, 
+			depth,
 			terrain, 
 			weather, 
 		};
@@ -31,7 +32,7 @@ export class GameScene {
 	addObject (object, coords)
 	{
 		this.objects.set(object, {position: coords});
-		Event.trigger('GameScene.addObject', this, object, coords);
+		Event.trigger('GameScene.addObject', object, coords);
 	}
 
 	delObject (objectKey)

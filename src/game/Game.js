@@ -31,13 +31,10 @@ export class Game {
 		// Initial settings for game
 		console.log('Init the Game', this);
 		//New scene
-		let NewScene = new GameScene({title: "Wonderful forest", width: 105, terrain:'bog'});
-		console.log("New scene added", NewScene);
+		let NewScene = new GameScene({title: "Wonderful forest", width: 25, depth: 25, terrain:'bog'});
 		//Some units
 		let Player = new Hero({title: 'Richard Asshole', weight: 80, size: 'L', hp: 100, isPlayer: true, color: 0x0000ff});
-		console.log("New player added", Player);
 		let Enemy = new Troop({weight: 1, size: 'S', color:0xff0000});
-		console.log("New enemy added", Enemy);
 
 		this.objects = {
 			NewScene, 
@@ -53,8 +50,8 @@ export class Game {
 			Enemy,
 		} = this.objects;
 		// This is a tests for future game
-		NewScene.addObject(Player, {x:3, y: 3, z: 0});
-		NewScene.addObject(Enemy, {x:10, y: 10, z: 0});
+		NewScene.addObject(Player, {x:3, y: 0, z: 3});
+		NewScene.addObject(Enemy, {x:10, y: 0, z: 10});
 	}
 
 	setupEventsHandlers () {
