@@ -14,12 +14,15 @@ export class ThreeEngine {
 		this.tweens = new Map();
 		// scene, camera and renderer
 		this.tools = {};
+        this.spamCnt = 0;
 		// apply handlers on future events
 		this.setupEventsHandlers();
 	}
 
 	setupScene () {
 		console.log('ThreeEngine.setupScene');
+
+		let kbd = new KeyboardState();
 
 		// simple scene
 		let scene = new THREE.Scene();
@@ -34,26 +37,20 @@ export class ThreeEngine {
         scene.add(Axes);
 
         // camera view position
-		camera.position.set(0, 0, 50);
-		camera.lookAt(0, 0, 0);
+		// camera.position.set(0, 50, 0);
+		// camera.lookAt(0, 0, 0);
 
-        let floorTexture = new THREE.TextureLoader().load( './img/checkerboard.jpg' );
-        floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
-        floorTexture.repeat.set( 5, 5 );
-        let floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+        let floorMaterial = new THREE.MeshBasicMaterial( { color: 0x333333 } );
         let floorGeometry = new THREE.PlaneGeometry(25, 25, 10, 10);
         let floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.position.z = -0.5;
         // floor.rotation.x = Math.PI / 2;
         scene.add(floor);
 
-		let kbd = new KeyboardState();
-
 		// freeze tools for speedup
-		this.tools = Object.freeze({ scene, camera, renderer, kbd});
-
+		this.tools = Object.freeze({scene, camera, renderer, kbd});
 		// Test object and center of the scene
-		this.addObject({color:'white'}, {x:0, y: 0}, true);
+		this.addObject({color:'white'}, {x:0, y: 0, z: 0}, true);
 
 		// Start clock sync
 		this.clock = new THREE.Clock(true);
@@ -63,18 +60,19 @@ export class ThreeEngine {
 
 	// recursive function
 	animate() {
-		requestAnimationFrame( this.animate.bind(this) );// bind help us: "this" everytime is ThreeEngine object
 		this.render();
-	}
+        requestAnimationFrame( this.animate.bind(this) );// bind help us: "this" everytime is ThreeEngine object
+    }
 
 	render () {
-		let { scene, camera, renderer } = this.tools;
+		let { scene, camera, renderer, kbd } = this.tools;
+        kbd.update();
 		this.delta = this.clock.getDelta();
 		//TEST: rotation is only for testing
 		this.objectsRotation();
-		this.objectsTweens();
-		this.movePlayer();
-		this.rotatePlayer();
+        this.movePlayer();
+        this.rotatePlayer();
+        this.objectsTweens();
 
 		renderer.render( scene, camera );
 	}
@@ -92,7 +90,10 @@ export class ThreeEngine {
 	objectsTweens () {
 		// TWEEN.update();
 		this.tweens.forEach( (tweens, object) => {
-			tweens.forEach( (tween ) => {tween.update()});
+			tweens.forEach( (tween) => {
+				//console.log(tween);
+				tween.update();
+			});
 		});
 	}
 
@@ -107,10 +108,10 @@ export class ThreeEngine {
 
         if( gameObject.isPlayer && gameObject.isPlayer === true ) {
             this.playerGameObject = gameObject;
-            camera.position.z = 25;
-            camera.position.y = -15;
             // Attach camera to player
             object.add(camera);
+            camera.position.z = 50;
+            camera.position.y = -15;
             camera.lookAt(object.position);
         }
 
@@ -120,7 +121,8 @@ export class ThreeEngine {
     	else {
             object
                 .translateX(position.x)
-                .translateY(position.y);
+                .translateY(position.y)
+                .translateZ(position.z);
         }
 		scene
 			.add(object);
@@ -144,19 +146,34 @@ export class ThreeEngine {
 	}
 
 	movePlayer () {
-        if( this.playerGameObject === null )
-            return false;
+		let spamTreshold = 10;
+		// Фильтруем спам от onKeyPressed
+        if( this.isMoving === true ){
+        	if( this.spamCnt <= spamTreshold )
+            	return false;
+        	else {
+        		this.isMoving = false;
+                this.spamCnt = 0;
+			}
+        }
 
         let {kbd} = this.tools;
-        kbd.update();
         let movingPressed = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D") );
         if( !movingPressed )
         	return false;
 
-        let playerObject = this.objects.get(this.playerGameObject);
+        this.spamCnt++;
+
+		console.log('moving')
+
+		let playerObject = this.objects.get(this.playerGameObject);
         let playerCurrentTweens = this.tweens.get(playerObject);
-        if( playerCurrentTweens )
-            playerCurrentTweens.forEach( (tween ) => {tween.stop()});
+        if( playerCurrentTweens ) {
+            playerCurrentTweens.forEach( (tween ) => {
+            	tween.stop();
+                playerCurrentTweens.delete(tween);
+            });
+        }
         // let direction = playerObject.getWorldPosition();
 
         // calculate distance for single player move
@@ -176,20 +193,31 @@ export class ThreeEngine {
         // console.log(playerObject.position);
         // let moveMatrix = playerObject.matrix.multiplyMatrices(moveForwardMatrix, playerObject.matrix);
         // playerObject.applyMatrix();
-
-		let startPosition = new THREE.Vector3(0,0,0);
-		let endPosition = new THREE.Vector3(x,y,z);
-        let tween = new TWEEN.Tween(startPosition).to(endPosition, this.delta);
-        tween.easing(TWEEN.Easing.Elastic.Out);
-        tween.start();
+		let distance = 1;
+		// let motionTime = 100;// Animation for 1 second
+		let motionTime = this.delta;// Animation for delta time
+		let startVector = new THREE.Vector3(0,0,0);
+		let directionVector = new THREE.Vector3(x,y,z);
+        let tween = new TWEEN.Tween(startVector)
+			.to(directionVector, motionTime)
+        	// .easing(TWEEN.Easing.Quadratic.Out)
+        	.start();
         let obj = this;
+
+        tween.on('start', function() {
+        	console.log('tween onStart');
+            obj.isMoving = true;
+		});
         // Every tick this function calls
-        tween.on('update', function(coords){
-        	// console.log(playerObject);
-            playerObject.translateOnAxis(coords, obj.delta*10);
+        tween.on('update', function(currentVector){
+        	let pathEstimate = distance*currentVector.distanceTo(directionVector);
+            playerObject.translateOnAxis(directionVector, distance-pathEstimate);
 		});
         tween.on('complete', function(){
-        	console.log('step!');
+        	console.log('tween onComplete');
+            obj.isMoving = false;
+        	obj.tweens.get(playerObject).delete(this);
+        	console.log(obj.tweens.get(playerObject).length);
 		})
 
         if( !this.tweens.has(playerObject) )
@@ -202,21 +230,16 @@ export class ThreeEngine {
             return false;
 
         let {kbd} = this.tools;
-        kbd.update();
-        let rotatePressed = (kbd.pressed("left") || kbd.pressed("right") || kbd.pressed("up") || kbd.pressed("down") );
+        let rotatePressed = (kbd.down("left") || kbd.down("right") );
         if( !rotatePressed )
             return false;
 
         let playerObject = this.objects.get(this.playerGameObject);
-        let angle = 0.01;
+        let angle = 0.125;
         if( kbd.pressed("left") )
             playerObject.rotateZ(Math.PI*angle);
         if ( kbd.pressed("right") )
             playerObject.rotateZ(-Math.PI*angle);
-        // if(  kbd.pressed("up") )
-        //     playerObject.rotateX(Math.PI*angle);
-        // if(  kbd.pressed("down") )
-        //     playerObject.rotateX(-Math.PI*angle);
 	}
 
 	setupEventsHandlers () {
@@ -230,10 +253,18 @@ export class ThreeEngine {
 			console.log('ThreeEngine.on.GameScene.addObject', gameScene, gameObject, position)
 			obj.addObject(gameObject, position);
 		});
-		Event.on('GameScene.moveObjectTo', function(gameObject, targetPosition){
-			console.log('ThreeEngine.on.GameScene.moveObjectTo', gameObject, targetPosition)
-			obj.moveObjectTo(gameObject, targetPosition);
-		});
-        document.addEventListener( 'keypress', obj.onKeyPress, false );
-    }
+		// Event.on('GameScene.moveObjectTo', function(gameObject, targetPosition){
+		// 	console.log('ThreeEngine.on.GameScene.moveObjectTo', gameObject, targetPosition)
+		// 	obj.moveObjectTo(gameObject, targetPosition);
+		// });
+        // document.addEventListener( 'keypress', obj.onKeyPress, false );
+        // document.addEventListener( 'keydown', this.onKeyDown.bind(this), false );
+
+        window.onresize = function(){
+            obj.tools.renderer.setSize(window.innerWidth*.95,window.innerHeight*.95);
+            var aspectRatio = window.innerWidth/window.innerHeight;
+            obj.tools.camera.aspect = aspectRatio;
+            obj.tools.camera.updateProjectionMatrix();
+        }
+	}
 }
