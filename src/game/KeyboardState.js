@@ -1,71 +1,70 @@
-"use strict";
 
 export class KeyboardState {
-    constructor() {
-        // bind keyEvents
-        document.addEventListener("keydown", KeyboardState.onKeyDown, false);
-        document.addEventListener("keyup",   KeyboardState.onKeyUp,   false);
-    }
-
-    update() {
-        for (let key in KeyboardState.status) {
-            // insure that every keypress has "down" status exactly once
-            if ( !KeyboardState.status[key].updatedPreviously ) {
-                KeyboardState.status[key].down        		= true;
-                KeyboardState.status[key].pressed     		= true;
-                KeyboardState.status[key].updatedPreviously = true;
-            }
-            else // updated previously
-            {
-                KeyboardState.status[key].down = false;
-            }
-
-            // key has been flagged as "up" since last update
-            if ( KeyboardState.status[key].up ) {
-                delete KeyboardState.status[key];
-                continue; // move on to next key
-            }
-
-            if ( !KeyboardState.status[key].pressed ) // key released
-                KeyboardState.status[key].up = true;
-        }
+	constructor() {
+		// bind keyEvents
+		document.addEventListener("keydown", KeyboardState.onKeyDown, false);
+		document.addEventListener("keyup",   KeyboardState.onKeyUp,   false);
 	}
 
-    down(keyName) {
-        return (KeyboardState.status[keyName] && KeyboardState.status[keyName].down);
+	static keyName(keyCode ) {
+		return ( KeyboardState.k[keyCode] != null ) ?
+			KeyboardState.k[keyCode] :
+			String.fromCharCode(keyCode);
 	}
 
-    pressed(keyName) {
-        return (KeyboardState.status[keyName] && KeyboardState.status[keyName].pressed);
+	static onKeyUp(event) {
+		const key = KeyboardState.keyName(event.keyCode);
+		if ( KeyboardState.status[key] )
+			KeyboardState.status[key].pressed = false;
 	}
 
-    up(keyName) {
-        return (KeyboardState.status[keyName] && KeyboardState.status[keyName].up);
+	static onKeyDown(event) {
+		const key = KeyboardState.keyName(event.keyCode);
+		if ( !KeyboardState.status[key] )
+			KeyboardState.status[key] = { down: false, pressed: false, up: false, updatedPreviously: false };
 	}
 
-    debug() {
-        var list = "Keys active: ";
-        for (var arg in KeyboardState.status)
-            list += " " + arg
-        console.log(list);
+	update() {
+		for (let key in KeyboardState.status) {
+			// insure that every keypress has "down" status exactly once
+			if ( !KeyboardState.status[key].updatedPreviously ) {
+				KeyboardState.status[key].down        		= true;
+				KeyboardState.status[key].pressed     		= true;
+				KeyboardState.status[key].updatedPreviously = true;
+			}
+			else // updated previously
+			{
+				KeyboardState.status[key].down = false;
+			}
+
+			// key has been flagged as "up" since last update
+			if ( KeyboardState.status[key].up ) {
+				delete KeyboardState.status[key];
+				continue; // move on to next key
+			}
+
+			if ( !KeyboardState.status[key].pressed ) // key released
+				KeyboardState.status[key].up = true;
+		}
 	}
 
-    static keyName(keyCode ) {
-        return ( KeyboardState.k[keyCode] != null ) ?
-            KeyboardState.k[keyCode] :
-            String.fromCharCode(keyCode);
+	down(keyName) {
+		return (KeyboardState.status[keyName] && KeyboardState.status[keyName].down);
 	}
 
-    static onKeyUp(event) {
-        var key = KeyboardState.keyName(event.keyCode);
-        if ( KeyboardState.status[key] )
-            KeyboardState.status[key].pressed = false;
+	pressed(keyName) {
+		return (KeyboardState.status[keyName] && KeyboardState.status[keyName].pressed);
 	}
 
-    static onKeyDown(event) {
-        var key = KeyboardState.keyName(event.keyCode);
-        if ( !KeyboardState.status[key] )
-            KeyboardState.status[key] = { down: false, pressed: false, up: false, updatedPreviously: false };
+	up(keyName) {
+		return (KeyboardState.status[keyName] && KeyboardState.status[keyName].up);
+	}
+
+	debug() {
+		let list = "Keys active: ";
+		for (let arg in KeyboardState.status)
+			list += " " + arg
+		console.log(list);
 	}
 }
 
@@ -80,7 +79,7 @@ KeyboardState.k =
     45: "insert",   46: "delete",   186: ";",       187: "=",
     188: ",",      189: "-",        190: ".",       191: "/",
     219: "[",      220: "\\",       221: "]",       222: "'"
-}
+};
 
 KeyboardState.status = {};
 

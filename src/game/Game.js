@@ -50,8 +50,8 @@ export class Game {
 			Enemy,
 		} = this.objects;
 		// This is a tests for future game
-		NewScene.addObject(Player, {x:3, y: 0, z: 3});
-		NewScene.addObject(Enemy, {x:10, y: 0, z: 10});
+		NewScene.addObject(Player, {x:7, y: 0, z: 7});
+		NewScene.addObject(Enemy, {x:3, y: 0, z: 3});
 	}
 
 	setupEventsHandlers () {
