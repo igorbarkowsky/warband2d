@@ -2,8 +2,8 @@
 export class KeyboardState {
 	constructor() {
 		// bind keyEvents
-		document.addEventListener("keydown", KeyboardState.onKeyDown, false);
-		document.addEventListener("keyup",   KeyboardState.onKeyUp,   false);
+		document.addEventListener("keydown", KeyboardState.onKeyDown, true);
+		document.addEventListener("keyup",   KeyboardState.onKeyUp,   true);
 	}
 
 	static keyName(keyCode ) {

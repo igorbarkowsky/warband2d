@@ -145,7 +145,7 @@ export class ThreeEngine {
 	}
 
 
-	// recursive function
+	// ANIMATION LOOP - recursive function
 	animate() {
 		// Пока не завершена загрузка данных - показываем загрузчик
 		if( this.showLoadingScreen() )
@@ -155,13 +155,14 @@ export class ThreeEngine {
 		this.render();
 	}
 
+	// Maybe main function of this engine - render on each frame
 	render() {
 		let {scene, camera, renderer, kbd} = this.tools;
 		kbd.update();
 		this.delta = this.clock.getDelta();
 
-		this.animatePlayer();
-		this.movePlayer();
+		// this.animatePlayer();
+		// this.movePlayer();
 
 		if( this.playerAnimixer !== null )
 			this.playerAnimixer.update(this.delta);
@@ -318,7 +319,8 @@ export class ThreeEngine {
 		return true;
 	}
 
-	animatePlayer () {
+	animatePlayer (event) {
+		console.log('animatePlayer', event.code, Object.keys(KeyboardState.status));
 		let {kbd} = this.tools;
 
 		//TODO: Разная анимация на разные направления (ходьба и бег вперед, пятиться, стрейф вправо и влево)
@@ -340,7 +342,8 @@ export class ThreeEngine {
 		return true;
 	}
 
-	movePlayer() {
+	movePlayer(event) {
+		console.log('movePlayer', event.code, Object.keys(KeyboardState.status));
 		let speedTreshold = 40;
 		if (this.speedMod < speedTreshold) {
 			this.speedMod++;
@@ -393,10 +396,12 @@ export class ThreeEngine {
 
 		// Browser events
 		window.addEventListener('resize', () => this.resizeGame() );
-		document.addEventListener('pointerlockchange', () => this.lockChangeAlert(), false);
+		document.addEventListener('pointerlockchange', () => this.togglePointerLock(), false);
 
 		// Dirty hacks for removeEventListener
 		this.rotateByMouseHandler = this.rotatePlayer.bind(this);
+		this.movePlayerHandler = this.movePlayer.bind(this);
+		this.animatePlayerHandler = this.animatePlayer.bind(this);
 
 		// Screenshot
 		document.addEventListener("keydown", event => this.takeScreenshot(event), true);
@@ -426,16 +431,28 @@ export class ThreeEngine {
 		renderer.domElement.requestPointerLock()
 	}
 
-	lockChangeAlert () {
+	togglePointerLock () {
 		let {renderer} = this.tools;
 
 		if( document.pointerLockElement === renderer.domElement ) {
-			renderer.domElement.addEventListener("mousemove", this.rotateByMouseHandler, true);
 			console.log('Pointer has locked by game');
+			// Enable interacting with Game world
+			renderer.domElement.addEventListener("mousemove", this.rotateByMouseHandler, true);
+			document.addEventListener("keydown",  this.animatePlayerHandler, true);
+			document.addEventListener("keyup",    this.animatePlayerHandler, true);
+			document.addEventListener("keydown",  this.movePlayerHandler, true);
+			document.addEventListener("keyup",    this.movePlayerHandler, true);
+			document.addEventListener("keypress", this.movePlayerHandler, true);
 			this.pointerLockRequested = true;
 		}
 		else {
+			// Disable interacting with Game world
 			renderer.domElement.removeEventListener("mousemove", this.rotateByMouseHandler, true);
+			document.removeEventListener("keydown",  this.animatePlayerHandler, true);
+			document.removeEventListener("keyup",    this.animatePlayerHandler, true);
+			document.removeEventListener("keydown",  this.movePlayerHandler, true);
+			document.removeEventListener("keyup",    this.movePlayerHandler, true);
+			document.removeEventListener("keypress", this.movePlayerHandler, true);
 			console.log('Pointer released');
 			this.pointerLockRequested = false;
 		}
