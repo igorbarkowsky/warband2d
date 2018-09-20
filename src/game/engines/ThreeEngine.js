@@ -1,24 +1,29 @@
 "use strict";
 
 import {Event} from "./../Game.js";
-import {KeyboardState} from "./../KeyboardState.js";
+// import {KeyboardState} from "./../KeyboardState.js";
+import {KeyboardHelper as KeyboardState} from "./../KeyboardHelper.js";
+import Input from "./../Input.js";
+// import * as Keyboard from "keymaster";
 import img from "./../img/Tile_Floor_texture.png";
 import Canvas2Image from "./../tools/canvas2image.js";
 
 import * as THREE from "three";
 import GLTFLoader from "three-gltf-loader";
 
+import Troop from './Troop.js';
+import Player from './Player.js';
+
 export class ThreeEngine {
 	constructor() {
 		// scene objects
 		this.objects = new Map();
-		this.RESOURCES_LOADED = false;
-		this.loadingManager = null;
-		this.loadingScreen = null;
 		// scene, camera and renderer
 		this.tools = {};
 		// Controls settings
 		this.speedMod = 0;
+
+		// this.input = new Input();
 
 		// Player tools
 		this.playerGameObject = null;
@@ -29,16 +34,18 @@ export class ThreeEngine {
 		this.helpers = new Set();
 
 		this.pointerLockRequested = false;
-		this.initLoadingScreen();
+		this.initLoading();
 		this.initTools();
 		// apply handlers on future events
 		this.setupEventsHandlers();
 	}
 
-	initLoadingScreen () {
-		let loadingScreen, loadingManager;
+	initLoading () {
+		this.loading = {};
 
-		loadingScreen = {
+		let RESOURCES_LOADED = false, screen, manager;
+
+		screen = {
 			scene: new THREE.Scene(),
 			camera: new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 100),
 			box: new THREE.Mesh(
@@ -46,24 +53,23 @@ export class ThreeEngine {
 				new THREE.MeshBasicMaterial({ color:0x4444ff })
 			)
 		};
-		loadingScreen.box.position.set(0,0,5);
-		loadingScreen.camera.lookAt(loadingScreen.box.position);
-		loadingScreen.scene.add(loadingScreen.box);
-		this.loadingScreen = loadingScreen;
+		screen.box.position.set(0,0,5);
+		screen.camera.lookAt(screen.box.position);
+		screen.scene.add(screen.box);
 
-		loadingManager = new THREE.LoadingManager();
+		manager = new THREE.LoadingManager();
 		//loadingManager.onStart = ( url, itemsLoaded, itemsTotal ) =>
 		// 	console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
 		//loadingManager.onProgress = (item, loaded, total) =>
 		// 	console.log('Loading file', item, '\nLoaded', loaded, 'of', total);
-		loadingManager.onError = item =>
+		manager.onError = item =>
 			console.log( 'There was an error loading item', item);
-		loadingManager.onLoad = () => {
+		manager.onLoad = () => {
 			console.log("loaded all resources");
-			this.RESOURCES_LOADED = true;
+			this.loading.RESOURCES_LOADED = true;
 		};
 
-		this.loadingManager = loadingManager;
+		this.loading = {RESOURCES_LOADED, screen, manager};
 	}
 
 	initTools () {
@@ -80,25 +86,25 @@ export class ThreeEngine {
 	}
 
 	showLoadingScreen () {
-		if( this.RESOURCES_LOADED == true )
+		if( this.loading.RESOURCES_LOADED == true )
 			return false;
 
 		let {renderer} = this.tools;
-		let {loadingScreen} = this;
+		let {screen} = this.loading;
 
 
-		loadingScreen.box.position.x -= 0.05;
-		if( loadingScreen.box.position.x < -10 ) loadingScreen.box.position.x = 10;
-		loadingScreen.box.position.y = Math.sin(loadingScreen.box.position.x);
+		screen.box.position.x -= 0.05;
+		if( screen.box.position.x < -10 ) screen.box.position.x = 10;
+		screen.box.position.y = Math.sin(screen.box.position.x);
 
-		renderer.render(loadingScreen.scene, loadingScreen.camera);
+		renderer.render(screen.scene, screen.camera);
 		requestAnimationFrame(this.animate.bind(this));
 		return true; // Stop the function here.
 	}
 
 	setupScene(gameScene) {
 		console.log('ThreeEngine.setupScene', gameScene);
-		let {renderer, scene, camera, kbd} = this.tools;
+		let {renderer, scene, camera} = this.tools;
 
 		// simple scene
 		scene.background = new THREE.Color(0x333333);
@@ -122,6 +128,7 @@ export class ThreeEngine {
 		renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild( renderer.domElement );
+		Event.trigger('ThreeEngine.requestPointerLock', this);
 		renderer.domElement.addEventListener('click', () => this.requestPointerLock() );
 
 		if( this.helpersActive ) {
@@ -158,14 +165,14 @@ export class ThreeEngine {
 	// Maybe main function of this engine - render on each frame
 	render() {
 		let {scene, camera, renderer, kbd} = this.tools;
-		kbd.update();
 		this.delta = this.clock.getDelta();
+		kbd.update();
 
+		this.objects.forEach( (engineObject, gameObject) => {
+			engineObject.update();
+		});
 		// this.animatePlayer();
 		// this.movePlayer();
-
-		if( this.playerAnimixer !== null )
-			this.playerAnimixer.update(this.delta);
 
 		renderer.render(scene, camera);
 	}
@@ -181,11 +188,23 @@ export class ThreeEngine {
 		if (gameObject.isPlayer && gameObject.isPlayer === true)
 			return this.loadPlayerModel(gameObject, position);
 		else
-			return this.loadEnemyModel(gameObject, position);
+			return this.loadTroopModel(gameObject, position);
+	}
+
+	addBoundingBoxHelper (model, object) {
+		let box = new THREE.Box3().setFromObject( model );
+		let helper = new THREE.Box3Helper(box, 0xffff00);
+		helper.name = 'Helper';
+		object.add(helper);
+
+		if( !this.helpersActive )
+			helper.visible = false;
+		this.helpers.add(helper);
+
 	}
 
 	loadFloor (gameScene) {
-		const textureLoader = new THREE.TextureLoader(this.loadingManager);
+		const textureLoader = new THREE.TextureLoader(this.loading.manager);
 
 		let texture = textureLoader.load(img, texture => {
 			texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -202,11 +221,11 @@ export class ThreeEngine {
 		return floor;
 	}
 
-	loadEnemyModel (gameObject, position) {
+	loadTroopModel (gameObject, position) {
 		const model = './src/game/models/spider/spider.glb';
-		const loader = new GLTFLoader(this.loadingManager);
+		const loader = new GLTFLoader(this.loading.manager);
 		loader.load(model,
-			importedObject => this.addEnemyModel2Scene(importedObject, gameObject, position),
+			importedObject => this.addTroopModel2Scene(importedObject, gameObject, position),
 			xhr => console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' ),
 			error => console.log( 'An error happened while loading', error )
 		);
@@ -214,35 +233,22 @@ export class ThreeEngine {
 		return true;
 	}
 
-	addEnemyModel2Scene (importedObject, gameObject, position) {
+	addTroopModel2Scene (model, gameObject, position) {
+		console.log('addTroopModel2Scene', model, gameObject, position);
 		let {scene} = this.tools;
 
-		console.log(importedObject);
-		let object = new THREE.Group();
+		let troop = new Troop(this);
+		troop.initObject3dFromGltfModel(model)
+			.initPosition(position)
+			.initAni(model)
+		;
 
-		let objectScale = 100;
-		importedObject.scene.scale.divideScalar(objectScale);
+		this.addBoundingBoxHelper(troop.model, troop.object);
 
-		object.add(importedObject.scene);
-		object
-			.translateX(position.x)
-			.translateY(position.y-0.5)
-			.translateZ(position.z);
+		troop.object.name = gameObject.title;
 
-		let box = new THREE.Box3().setFromObject( importedObject.scene );
-		console.log('box of enemy model', box);
-		let helper = new THREE.Box3Helper(box, 0xffff00);
-		helper.name = 'Helper';
-		if( !this.helpersActive )
-			helper.visible = false;
-		object.add(helper);
-		this.helpers.add(helper);
-
-		scene.add(object);
-
-		object.name = gameObject.title;
-
-		this.objects.set(gameObject, {object: object, model: importedObject});
+		scene.add(troop.object);
+		this.objects.set(gameObject, troop);
 
 		return true;
 	}
@@ -251,7 +257,7 @@ export class ThreeEngine {
 		// const model = './src/game/models/t-rex/T-Rex.glb';
 		// const loader = new GLTFLoader(this.loadingManager);
 		const model = './src/game/models/marine/marine_anims_core.json';
-		const loader = new THREE.ObjectLoader(this.loadingManager);
+		const loader = new THREE.ObjectLoader(this.loading.manager);
 		loader.load(model,
 			importedObject => {
 				let mesh = null;
@@ -270,71 +276,43 @@ export class ThreeEngine {
 		return true;
 	}
 
-	addPlayerModel2Scene (importedObject, gameObject, position) {
-		console.log(importedObject);
+	addPlayerModel2Scene (model, gameObject, position) {
+		console.log('addPlayerModel2Scene', model, gameObject, position);
 		let {scene, camera} = this.tools;
 		this.playerGameObject = gameObject;
 
-		// Attach camera to player
-		let object = new THREE.Group();
-		object.add(camera);
-		camera.name = 'PlayerCamera';
-		// set camera behind player
-		camera.position.set(0, 3, 3);
-		// camera look to object position but higher (like somebody looks from behind players head)
-		camera.lookAt(object.position.clone().add(new THREE.Vector3(0, 2, 0)));
-		// default model is too big, so we must scale it down
-		let optimalScaleFoThisModel = 100;
-		importedObject.scale.divideScalar(optimalScaleFoThisModel);
-		let box = new THREE.Box3().setFromObject( importedObject );
-		let helper = new THREE.Box3Helper(box, 0xffff00);
-		helper.name = 'Helper';
-		if( !this.helpersActive )
-			helper.visible = false;
-		object.add(helper);
-		this.helpers.add(helper);
+		let player = new Player(this);
 
-		object.add(importedObject);
+		player.initObject3dFromJsonModel(model)
+			.initPosition(position)
+			.bindCamera(camera)
+			.initAni(model);
 
-		this.playerAnimixer = new THREE.AnimationMixer( importedObject );
+		this.addBoundingBoxHelper(player.model, player.object);
 
-		object
-			.translateX(position.x)
-			.translateY(position.y-0.5)
-			.translateZ(position.z);
+		player.object.name = gameObject.title;
 
-		object.name = gameObject.title;
-
-		scene.add(object);
-
-		this.objects.set(gameObject, {object: object, model: importedObject});
-
-		this.playerAnimations = {
-			idle: this.playerAnimixer.clipAction( 'idle' ),
-			move: this.playerAnimixer.clipAction( 'run' ),
-		};
-
-		this.playerAnimations.idle.play();
+		scene.add(player.object);
+		this.objects.set(gameObject, player);
 
 		return true;
 	}
 
-	animatePlayer (event) {
-		console.log('animatePlayer', event.code, Object.keys(KeyboardState.status));
+	animatePlayer () {
 		let {kbd} = this.tools;
-
 		//TODO: Разная анимация на разные направления (ходьба и бег вперед, пятиться, стрейф вправо и влево)
 		//TODO: Переключать анимацию через миксер с помощью weight
 		let movingStarted = (kbd.down("W") || kbd.down("A") || kbd.down("S") || kbd.down("D"));
 		let movingContinued = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
 		let movingReleased = (kbd.up("W") || kbd.up("A") || kbd.up("S") || kbd.up("D"));
+		//console.log('animatePlayer', [movingStarted, movingContinued, movingReleased], Object.keys(kbd.status));
 		if( movingStarted ) {
-			console.log('movingPressed');
+			console.log('animatePlayer movingStarted');
 			this.playerAnimations.move.play();
 		}
 		// full stop
 		if( movingReleased && !movingContinued ) {
-			console.log('movingReleased');
+			console.log('animatePlayer movingReleased');
 			this.playerAnimations.move.stop();
 			this.playerAnimations.idle.play();
 		}
@@ -342,18 +320,24 @@ export class ThreeEngine {
 		return true;
 	}
 
-	movePlayer(event) {
-		console.log('movePlayer', event.code, Object.keys(KeyboardState.status));
+	movePlayer() {
+		let {kbd} = this.tools;
+
+		let movingStarted = (kbd.down("W") || kbd.down("A") || kbd.down("S") || kbd.down("D"));
+		let movingContinued = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
+		let movingReleased = (kbd.up("W") || kbd.up("A") || kbd.up("S") || kbd.up("D"));
+		//console.log('movePlayer', [movingStarted, movingContinued, movingReleased], Object.keys(kbd.status));
+		// Stop moving if no keys down or pressed now
+		if (!movingStarted && !movingContinued) {
+			this.speedMod = 0;
+			return false;
+		}
+		// And move player in other hand
+		console.log('movePlayer');
+
 		let speedTreshold = 40;
 		if (this.speedMod < speedTreshold) {
 			this.speedMod++;
-		}
-
-		let {kbd} = this.tools;
-		let movingPressed = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
-		if (!movingPressed) {
-			this.speedMod = 0;
-			return false;
 		}
 
 		let playerObject = this.getObject(this.playerGameObject).object;
@@ -396,17 +380,13 @@ export class ThreeEngine {
 
 		// Browser events
 		window.addEventListener('resize', () => this.resizeGame() );
+		//document.addEventListener("keypress", () =>  this.tools.kbd.update(), true);
 		document.addEventListener('pointerlockchange', () => this.togglePointerLock(), false);
 
 		// Dirty hacks for removeEventListener
-		this.rotateByMouseHandler = this.rotatePlayer.bind(this);
-		this.movePlayerHandler = this.movePlayer.bind(this);
-		this.animatePlayerHandler = this.animatePlayer.bind(this);
-
-		// Screenshot
-		document.addEventListener("keydown", event => this.takeScreenshot(event), true);
-		// Helpers
-		document.addEventListener("keydown", event => this.toggleHelpers(event), true);
+		// this.rotateByMouseHandler = Input.onMouseMove;
+		// this.eventKeyDownHandler = Input.onKeyDown;
+		// this.eventKeyUpHandler = this.animatePlayer.bind(this);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -437,23 +417,19 @@ export class ThreeEngine {
 		if( document.pointerLockElement === renderer.domElement ) {
 			console.log('Pointer has locked by game');
 			// Enable interacting with Game world
-			renderer.domElement.addEventListener("mousemove", this.rotateByMouseHandler, true);
-			document.addEventListener("keydown",  this.animatePlayerHandler, true);
-			document.addEventListener("keyup",    this.animatePlayerHandler, true);
-			document.addEventListener("keydown",  this.movePlayerHandler, true);
-			document.addEventListener("keyup",    this.movePlayerHandler, true);
-			document.addEventListener("keypress", this.movePlayerHandler, true);
+			Input.enable(renderer);
+
+			// this.Keyboard('w, a, s, d', 'gameScene', this.animatePlayerHandler);
+			// this.Keyboard('w, a, s, d', 'gameScene', this.movePlayerHandler);
+
 			this.pointerLockRequested = true;
 		}
 		else {
-			// Disable interacting with Game world
-			renderer.domElement.removeEventListener("mousemove", this.rotateByMouseHandler, true);
-			document.removeEventListener("keydown",  this.animatePlayerHandler, true);
-			document.removeEventListener("keyup",    this.animatePlayerHandler, true);
-			document.removeEventListener("keydown",  this.movePlayerHandler, true);
-			document.removeEventListener("keyup",    this.movePlayerHandler, true);
-			document.removeEventListener("keypress", this.movePlayerHandler, true);
 			console.log('Pointer released');
+			// Disable interacting with Game world
+			Input.disable(renderer);
+
+			// this.Keyboard.deleteScope('gameScene');
 			this.pointerLockRequested = false;
 		}
 	}

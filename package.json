@@ -13,6 +13,7 @@
   "dependencies": {
     "cannon": "github:schteppe/cannon.js",
     "es6-tween": "^5.3.0",
+    "keymaster": "^1.6.2",
     "stats-js": "^1.0.0-alpha1"
   },
   "devDependencies": {

@@ -51358,6 +51358,282 @@ class Hero extends _Troop_js__WEBPACK_IMPORTED_MODULE_0__["Troop"] {
 
 /***/ }),
 
+/***/ "./src/game/Input.js":
+/*!***************************!*\
+  !*** ./src/game/Input.js ***!
+  \***************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Input; });
+/* harmony import */ var _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./InputDesktop.js */ "./src/game/InputDesktop.js");
+/* harmony import */ var _InputJoystick_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./InputJoystick.js */ "./src/game/InputJoystick.js");
+
+
+
+class Input {
+
+	constructor () {}
+
+	// Register all possible events from input devices and translate it to target classes
+	static enable (renderer) {
+		renderer.domElement.addEventListener("mousemove", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseMove, true);
+		document.addEventListener("keydown",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyDown, true);
+		document.addEventListener("keypress",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyPress, true);
+		document.addEventListener("keyup",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyUp, true);
+	}
+
+	static disable (renderer) {
+		renderer.domElement.removeEventListener("mousemove", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseMove, true);
+		document.removeEventListener("keydown",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyDown, true);
+		document.removeEventListener("keypress",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyPress, true);
+		document.removeEventListener("keyup",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyUp, true);
+	}
+
+}
+
+/***/ }),
+
+/***/ "./src/game/InputDesktop.js":
+/*!**********************************!*\
+  !*** ./src/game/InputDesktop.js ***!
+  \**********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return InputDesktop; });
+/* harmony import */ var _Game_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Game.js */ "./src/game/Game.js");
+/* harmony import */ var _KeyboardState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./KeyboardState */ "./src/game/KeyboardState.js");
+
+
+
+class InputDesktop {
+
+	constructor() {}
+
+	static onKeyDown (event) {
+		const key = InputDesktop.keyName(event.keyCode);
+		if( !InputDesktop.isPressed(key) )
+			InputDesktop.pressed[key] = true;
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.KeyDown", event);
+	}
+
+	static onKeyUp (event) {
+		const key = InputDesktop.keyName(event.keyCode);
+		delete InputDesktop.pressed[key];
+		// console.log("onKeyUp delete key", key, "and now pressed only", InputDesktop.allPressed());
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.KeyUp", event);
+	}
+
+	static onKeyPress (event) {
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.KeyPress", event);
+	}
+
+	static onMouseMove (event) {
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.MouseMove", event);
+	}
+
+	static keyName(keyCode ) {
+		return ( InputDesktop.k[keyCode] != null ) ?
+			InputDesktop.k[keyCode] :
+			String.fromCharCode(keyCode);
+	}
+
+	static isPressed (key) {
+		return ( InputDesktop.pressed[key] !== undefined );
+	}
+
+	static isMoveKey (key) {
+		return ( InputDesktop.moveKeys[key] !== undefined );
+	}
+
+	static allPressed () {
+		return Object.keys(InputDesktop.pressed);
+	}
+}
+
+//NOTE: I know it bad - but in current es6 i can do static map property only this way
+InputDesktop.pressed = {};//BUG: Set() works incorrect
+InputDesktop.moveKeys = {
+	"W": "forward",
+	"S": "backward",
+	"D": "right",
+	"A": "left",
+};
+InputDesktop.moveVectors = {
+	"forward":  {x:0, y:0, z:-1},
+	"backward": {x:0, y:0, z:1},
+	"left":     {x:-1, y:0, z:0},
+	"right":    {x:1, y:0, z:0},
+};
+InputDesktop.k = {
+		8: "backspace",  9: "tab",       13: "enter",    16: "shift",
+		17: "ctrl",     18: "alt",       27: "esc",      32: "space",
+		33: "pageup",   34: "pagedown",  35: "end",      36: "home",
+		37: "left",     38: "up",        39: "right",    40: "down",
+		45: "insert",   46: "delete",   186: ";",       187: "=",
+		188: ",",      189: "-",        190: ".",       191: "/",
+		219: "[",      220: "\\",       221: "]",       222: "'"
+};
+
+
+/***/ }),
+
+/***/ "./src/game/InputJoystick.js":
+/*!***********************************!*\
+  !*** ./src/game/InputJoystick.js ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return InputJoystick; });
+/* harmony import */ var _Game_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Game.js */ "./src/game/Game.js");
+
+
+class InputJoystick {
+
+	constructor() {}
+
+	static onKeyDown (event) {
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.KeyDown", event);
+	}
+
+	static onKeyUp (event) {
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.KeyUp", event);
+	}
+
+	static onKeyPress (event) {
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.KeyPress", event);
+	}
+
+	static onMouseMove (event) {
+		console.log("Input.onMouseMove");
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("Input.MouseMove", event);
+	}
+
+	static get keyMap () {
+		return {
+			keyW: "forward",
+			keyS: "backward",
+			keyA: "left",
+			keyD: "right",
+		};
+	}
+
+	static get moveVector () {
+		return {
+			forward: {x:0, y:0, z:-1},
+			backward: {x:0, y:0, z:1},
+			left: {x:-1, y:0, z:0},
+			right: {x:1, y:0, z:0},
+		};
+	}
+}
+
+/***/ }),
+
+/***/ "./src/game/KeyboardHelper.js":
+/*!************************************!*\
+  !*** ./src/game/KeyboardHelper.js ***!
+  \************************************/
+/*! exports provided: KeyboardHelper */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "KeyboardHelper", function() { return KeyboardHelper; });
+class KeyboardHelper {
+	constructor() {
+		// bind keyEvents
+		this.status = {};
+		document.addEventListener("keydown",  event => this.onKeyDown(event), true);
+		document.addEventListener("keyup",    event =>  this.onKeyUp(event),  true);
+	}
+
+	keyName(keyCode ) {
+		return ( this.k[keyCode] != null ) ?
+			this.k[keyCode] :
+			String.fromCharCode(keyCode);
+	}
+
+	onKeyUp(event) {
+		const key = this.keyName(event.keyCode);
+		if ( this.status[key] )
+			this.status[key].pressed = false;
+	}
+
+	onKeyDown(event) {
+		const key = this.keyName(event.keyCode);
+		if ( !this.status[key] )
+			this.status[key] = { down: true, pressed: false, up: false, updatedPreviously: false };
+	}
+
+	update() {
+		for (let key in this.status) {
+			// insure that every keypress has "down" status exactly once
+			if ( !this.status[key].updatedPreviously ) {
+				this.status[key].down        		= true;
+				this.status[key].pressed     		= true;
+				this.status[key].updatedPreviously = true;
+			}
+			else // updated previously
+			{
+				this.status[key].down = false;
+			}
+
+			// key has been flagged as "up" since last update
+			if ( this.status[key].up ) {
+				delete this.status[key];
+				continue; // move on to next key
+			}
+
+			if ( !this.status[key].pressed ) // key released
+				this.status[key].up = true;
+		}
+	}
+
+	down(keyName) {
+		return (this.status[keyName] && this.status[keyName].down);
+	}
+
+	pressed(keyName) {
+		return (this.status[keyName] && this.status[keyName].pressed);
+	}
+
+	up(keyName) {
+		return (this.status[keyName] && this.status[keyName].up);
+	}
+
+	debug() {
+		let list = "Keys active: ";
+		for (let arg in this.status)
+			list += " " + arg
+		console.log(list);
+	}
+
+	get k () {
+		return {
+			8: "backspace",  9: "tab",       13: "enter",    16: "shift",
+			17: "ctrl",     18: "alt",       27: "esc",      32: "space",
+			33: "pageup",   34: "pagedown",  35: "end",      36: "home",
+			37: "left",     38: "up",        39: "right",    40: "down",
+			45: "insert",   46: "delete",   186: ";",       187: "=",
+			188: ",",      189: "-",        190: ".",       191: "/",
+			219: "[",      220: "\\",       221: "]",       222: "'"
+		}
+	}
+};
+
+
+
+/***/ }),
+
 /***/ "./src/game/KeyboardState.js":
 /*!***********************************!*\
   !*** ./src/game/KeyboardState.js ***!
@@ -55520,6 +55796,151 @@ class GameEngineFactory {
 
 /***/ }),
 
+/***/ "./src/game/engines/Player.js":
+/*!************************************!*\
+  !*** ./src/game/engines/Player.js ***!
+  \************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Player; });
+/* harmony import */ var _Game_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../Game.js */ "./src/game/Game.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _Troop_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Troop.js */ "./src/game/engines/Troop.js");
+/* harmony import */ var _InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./../InputDesktop.js */ "./src/game/InputDesktop.js");
+
+
+
+
+
+class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_2__["default"] {
+	constructor (engine) {
+		super(engine);
+		this.speedModifier = 0;
+		this.speedThreshold = 25;
+		this.globalSpeedModifier = 2;
+		this.rotateMod = 0.0005;
+		this.moves = {};
+
+		this.initEventHandlers();
+	}
+
+	bindCamera (camera) {
+		// Attach camera to player
+		this.object.add(camera);
+		camera.name = 'PlayerCamera';
+		// set camera behind player
+		camera.position.set(0, 3, 3);
+		// camera look to object position but higher (like somebody looks from behind players head)
+		camera.lookAt(this.object.position.clone().add(new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](0, 2, 0)));
+
+		return this;
+	}
+
+	initEventHandlers () {
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.MouseMove", event => this.rotatePlayer(event));
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.KeyDown", event => this.onMoveStart(event));
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.KeyUp", event => this.onMoveEnd(event));
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("ThreeEngineUnit.onInitAnimationSuccess", () => this.startIdleAnimation());
+	}
+
+	startIdleAnimation () {
+		this.ani.actions.idle.play();
+	}
+
+	onMoveStart (event) {
+		let key = _InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__["default"].keyName(event.keyCode);
+		if( !_InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__["default"].isMoveKey(key) )
+			return false;
+
+		const direction = _InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__["default"].moveKeys[key];
+		if( this.moves[direction] !== undefined )
+			return false;
+
+		this.moves[direction] = true;
+
+		//TODO: We can start tween motion or animation here
+		this.ani.actions.run.play();
+		return true;
+	}
+
+	onMoveEnd (event) {
+		let key = _InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__["default"].keyName(event.keyCode);
+		if( !_InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__["default"].isMoveKey(key) )
+			return false;
+
+		const direction = _InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__["default"].moveKeys[key];
+		if( this.moves[direction] !== undefined )
+			delete this.moves[direction];
+
+		if( this.hasMoves() )
+			return true;
+
+		// Reduce speed modifier
+		this.speedModifier = 0;
+		//TODO: We can stop tween motion or animation here
+		this.ani.actions.run.stop();
+		this.ani.actions.idle.play();
+		return true;
+	}
+
+	hasMoves () {
+		return ( Object.keys(this.moves).length > 0 );
+	}
+
+	update () {
+		this.updateAnimation();
+		this.updatePosition();
+	}
+
+	updateAnimation () {
+		this.ani.mixer.update(this.engine.delta);
+	}
+
+	updatePosition () {
+		if( !this.hasMoves() )
+			return false;
+
+		//console.log(this.moveQueue.size);
+		let destinationVector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](0,0,0);
+		for( let d in this.moves )
+			destinationVector.add(_InputDesktop_js__WEBPACK_IMPORTED_MODULE_3__["default"].moveVectors[d]);
+
+		this.movePlayer(destinationVector);
+	}
+
+	movePlayer (directionVector) {
+		let playerObject = this.object;
+
+		// calculate distance for single player move in one frame
+		//TODO: It related to outfit weight, agility and other player stats
+		let initialSpeed = 1;//TODO: speed from Hero stats
+		let currentSpeed = initialSpeed + this.speedModifier*0.1;
+		// Unit cant move faster than threshold
+		if( currentSpeed > this.speedThreshold )
+			currentSpeed = this.speedThreshold;
+		else
+			this.speedModifier++;
+
+		console.log(currentSpeed);
+		let distance = currentSpeed * this.engine.delta * this.globalSpeedModifier;
+		playerObject.translateOnAxis(directionVector, distance);
+
+		return true;
+	}
+
+	rotatePlayer (event) {
+		// Rotate player to left/right
+		this.object.rotateY(-event.movementX*this.rotateMod);
+		// Rotate camera to up/down
+		this.object.getObjectByName('PlayerCamera').rotateX(-event.movementY*this.rotateMod);
+	}
+}
+
+/***/ }),
+
 /***/ "./src/game/engines/ThreeEngine.js":
 /*!*****************************************!*\
   !*** ./src/game/engines/ThreeEngine.js ***!
@@ -55531,14 +55952,23 @@ class GameEngineFactory {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ThreeEngine", function() { return ThreeEngine; });
 /* harmony import */ var _Game_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../Game.js */ "./src/game/Game.js");
-/* harmony import */ var _KeyboardState_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../KeyboardState.js */ "./src/game/KeyboardState.js");
-/* harmony import */ var _img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./../img/Tile_Floor_texture.png */ "./src/game/img/Tile_Floor_texture.png");
-/* harmony import */ var _img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _tools_canvas2image_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./../tools/canvas2image.js */ "./src/game/tools/canvas2image.js");
-/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
-/* harmony import */ var three_gltf_loader__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three-gltf-loader */ "./node_modules/three-gltf-loader/index.js");
-/* harmony import */ var three_gltf_loader__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(three_gltf_loader__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _KeyboardHelper_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../KeyboardHelper.js */ "./src/game/KeyboardHelper.js");
+/* harmony import */ var _Input_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./../Input.js */ "./src/game/Input.js");
+/* harmony import */ var _img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./../img/Tile_Floor_texture.png */ "./src/game/img/Tile_Floor_texture.png");
+/* harmony import */ var _img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _tools_canvas2image_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./../tools/canvas2image.js */ "./src/game/tools/canvas2image.js");
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var three_gltf_loader__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! three-gltf-loader */ "./node_modules/three-gltf-loader/index.js");
+/* harmony import */ var three_gltf_loader__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(three_gltf_loader__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _Troop_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./Troop.js */ "./src/game/engines/Troop.js");
+/* harmony import */ var _Player_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./Player.js */ "./src/game/engines/Player.js");
 
+
+
+// import {KeyboardState} from "./../KeyboardState.js";
+
+
+// import * as Keyboard from "keymaster";
 
 
 
@@ -55552,13 +55982,12 @@ class ThreeEngine {
 	constructor() {
 		// scene objects
 		this.objects = new Map();
-		this.RESOURCES_LOADED = false;
-		this.loadingManager = null;
-		this.loadingScreen = null;
 		// scene, camera and renderer
 		this.tools = {};
 		// Controls settings
 		this.speedMod = 0;
+
+		// this.input = new Input();
 
 		// Player tools
 		this.playerGameObject = null;
@@ -55569,49 +55998,50 @@ class ThreeEngine {
 		this.helpers = new Set();
 
 		this.pointerLockRequested = false;
-		this.initLoadingScreen();
+		this.initLoading();
 		this.initTools();
 		// apply handlers on future events
 		this.setupEventsHandlers();
 	}
 
-	initLoadingScreen () {
-		let loadingScreen, loadingManager;
+	initLoading () {
+		this.loading = {};
 
-		loadingScreen = {
-			scene: new three__WEBPACK_IMPORTED_MODULE_4__["Scene"](),
-			camera: new three__WEBPACK_IMPORTED_MODULE_4__["PerspectiveCamera"](90, window.innerWidth / window.innerHeight, 0.1, 100),
-			box: new three__WEBPACK_IMPORTED_MODULE_4__["Mesh"](
-				new three__WEBPACK_IMPORTED_MODULE_4__["BoxGeometry"](0.5,0.5,0.5),
-				new three__WEBPACK_IMPORTED_MODULE_4__["MeshBasicMaterial"]({ color:0x4444ff })
+		let RESOURCES_LOADED = false, screen, manager;
+
+		screen = {
+			scene: new three__WEBPACK_IMPORTED_MODULE_5__["Scene"](),
+			camera: new three__WEBPACK_IMPORTED_MODULE_5__["PerspectiveCamera"](90, window.innerWidth / window.innerHeight, 0.1, 100),
+			box: new three__WEBPACK_IMPORTED_MODULE_5__["Mesh"](
+				new three__WEBPACK_IMPORTED_MODULE_5__["BoxGeometry"](0.5,0.5,0.5),
+				new three__WEBPACK_IMPORTED_MODULE_5__["MeshBasicMaterial"]({ color:0x4444ff })
 			)
 		};
-		loadingScreen.box.position.set(0,0,5);
-		loadingScreen.camera.lookAt(loadingScreen.box.position);
-		loadingScreen.scene.add(loadingScreen.box);
-		this.loadingScreen = loadingScreen;
+		screen.box.position.set(0,0,5);
+		screen.camera.lookAt(screen.box.position);
+		screen.scene.add(screen.box);
 
-		loadingManager = new three__WEBPACK_IMPORTED_MODULE_4__["LoadingManager"]();
+		manager = new three__WEBPACK_IMPORTED_MODULE_5__["LoadingManager"]();
 		//loadingManager.onStart = ( url, itemsLoaded, itemsTotal ) =>
 		// 	console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
 		//loadingManager.onProgress = (item, loaded, total) =>
 		// 	console.log('Loading file', item, '\nLoaded', loaded, 'of', total);
-		loadingManager.onError = item =>
+		manager.onError = item =>
 			console.log( 'There was an error loading item', item);
-		loadingManager.onLoad = () => {
+		manager.onLoad = () => {
 			console.log("loaded all resources");
-			this.RESOURCES_LOADED = true;
+			this.loading.RESOURCES_LOADED = true;
 		};
 
-		this.loadingManager = loadingManager;
+		this.loading = {RESOURCES_LOADED, screen, manager};
 	}
 
 	initTools () {
 		let renderer, scene, camera, kbd;
-		kbd = new _KeyboardState_js__WEBPACK_IMPORTED_MODULE_1__["KeyboardState"]();
-		scene = new three__WEBPACK_IMPORTED_MODULE_4__["Scene"]();
-		camera = new three__WEBPACK_IMPORTED_MODULE_4__["PerspectiveCamera"]();
-		renderer = new three__WEBPACK_IMPORTED_MODULE_4__["WebGLRenderer"]({
+		kbd = new _KeyboardHelper_js__WEBPACK_IMPORTED_MODULE_1__["KeyboardHelper"]();
+		scene = new three__WEBPACK_IMPORTED_MODULE_5__["Scene"]();
+		camera = new three__WEBPACK_IMPORTED_MODULE_5__["PerspectiveCamera"]();
+		renderer = new three__WEBPACK_IMPORTED_MODULE_5__["WebGLRenderer"]({
 			antialias: true,
 			powerPreference: 'high-performance',
 			preserveDrawingBuffer: true,// for screenshots by pressing R
@@ -55620,35 +56050,35 @@ class ThreeEngine {
 	}
 
 	showLoadingScreen () {
-		if( this.RESOURCES_LOADED == true )
+		if( this.loading.RESOURCES_LOADED == true )
 			return false;
 
 		let {renderer} = this.tools;
-		let {loadingScreen} = this;
+		let {screen} = this.loading;
 
 
-		loadingScreen.box.position.x -= 0.05;
-		if( loadingScreen.box.position.x < -10 ) loadingScreen.box.position.x = 10;
-		loadingScreen.box.position.y = Math.sin(loadingScreen.box.position.x);
+		screen.box.position.x -= 0.05;
+		if( screen.box.position.x < -10 ) screen.box.position.x = 10;
+		screen.box.position.y = Math.sin(screen.box.position.x);
 
-		renderer.render(loadingScreen.scene, loadingScreen.camera);
+		renderer.render(screen.scene, screen.camera);
 		requestAnimationFrame(this.animate.bind(this));
 		return true; // Stop the function here.
 	}
 
 	setupScene(gameScene) {
 		console.log('ThreeEngine.setupScene', gameScene);
-		let {renderer, scene, camera, kbd} = this.tools;
+		let {renderer, scene, camera} = this.tools;
 
 		// simple scene
-		scene.background = new three__WEBPACK_IMPORTED_MODULE_4__["Color"](0x333333);
+		scene.background = new three__WEBPACK_IMPORTED_MODULE_5__["Color"](0x333333);
 		//scene.fog = new THREE.Fog(0x000000, 250, 1400);
 
-		let dirLight = new three__WEBPACK_IMPORTED_MODULE_4__["DirectionalLight"](0xffffff, 0.125);
+		let dirLight = new three__WEBPACK_IMPORTED_MODULE_5__["DirectionalLight"](0xffffff, 0.125);
 		dirLight.position.set(0, 0, 1).normalize();
 		scene.add(dirLight);
 		//
-		let pointLight = new three__WEBPACK_IMPORTED_MODULE_4__["PointLight"](0xffffff, 1.5);
+		let pointLight = new three__WEBPACK_IMPORTED_MODULE_5__["PointLight"](0xffffff, 1.5);
 		pointLight.position.set(0, 100, 90);
 		scene.add(pointLight);
 
@@ -55662,10 +56092,11 @@ class ThreeEngine {
 		renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild( renderer.domElement );
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger('ThreeEngine.requestPointerLock', this);
 		renderer.domElement.addEventListener('click', () => this.requestPointerLock() );
 
 		if( this.helpersActive ) {
-			let Axes = new three__WEBPACK_IMPORTED_MODULE_4__["AxesHelper"](20);
+			let Axes = new three__WEBPACK_IMPORTED_MODULE_5__["AxesHelper"](20);
 			Axes.name = 'Helper';
 			this.helpers.add(Axes);
 			scene.add(Axes);
@@ -55679,7 +56110,7 @@ class ThreeEngine {
 		scene.add(floor);
 
 		// Start clock sync
-		this.clock = new three__WEBPACK_IMPORTED_MODULE_4__["Clock"](true);
+		this.clock = new three__WEBPACK_IMPORTED_MODULE_5__["Clock"](true);
 		// start animation loop
 		this.animate();
 	}
@@ -55698,14 +56129,14 @@ class ThreeEngine {
 	// Maybe main function of this engine - render on each frame
 	render() {
 		let {scene, camera, renderer, kbd} = this.tools;
-		kbd.update();
 		this.delta = this.clock.getDelta();
+		kbd.update();
 
+		this.objects.forEach( (engineObject, gameObject) => {
+			engineObject.update();
+		});
 		// this.animatePlayer();
 		// this.movePlayer();
-
-		if( this.playerAnimixer !== null )
-			this.playerAnimixer.update(this.delta);
 
 		renderer.render(scene, camera);
 	}
@@ -55721,20 +56152,32 @@ class ThreeEngine {
 		if (gameObject.isPlayer && gameObject.isPlayer === true)
 			return this.loadPlayerModel(gameObject, position);
 		else
-			return this.loadEnemyModel(gameObject, position);
+			return this.loadTroopModel(gameObject, position);
+	}
+
+	addBoundingBoxHelper (model, object) {
+		let box = new three__WEBPACK_IMPORTED_MODULE_5__["Box3"]().setFromObject( model );
+		let helper = new three__WEBPACK_IMPORTED_MODULE_5__["Box3Helper"](box, 0xffff00);
+		helper.name = 'Helper';
+		object.add(helper);
+
+		if( !this.helpersActive )
+			helper.visible = false;
+		this.helpers.add(helper);
+
 	}
 
 	loadFloor (gameScene) {
-		const textureLoader = new three__WEBPACK_IMPORTED_MODULE_4__["TextureLoader"](this.loadingManager);
+		const textureLoader = new three__WEBPACK_IMPORTED_MODULE_5__["TextureLoader"](this.loading.manager);
 
-		let texture = textureLoader.load(_img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_2___default.a, texture => {
-			texture.wrapS = texture.wrapT = three__WEBPACK_IMPORTED_MODULE_4__["RepeatWrapping"];
+		let texture = textureLoader.load(_img_Tile_Floor_texture_png__WEBPACK_IMPORTED_MODULE_3___default.a, texture => {
+			texture.wrapS = texture.wrapT = three__WEBPACK_IMPORTED_MODULE_5__["RepeatWrapping"];
 			texture.offset.set( 0, 0 );
 			texture.repeat.set( 10, 10 );
 		});
-		let floor = new three__WEBPACK_IMPORTED_MODULE_4__["Mesh"](
-			new three__WEBPACK_IMPORTED_MODULE_4__["PlaneBufferGeometry"](gameScene.width, gameScene.depth),
-			new three__WEBPACK_IMPORTED_MODULE_4__["MeshBasicMaterial"]({map:texture, color: 0xffffff, opacity: 0.5, transparent: true})
+		let floor = new three__WEBPACK_IMPORTED_MODULE_5__["Mesh"](
+			new three__WEBPACK_IMPORTED_MODULE_5__["PlaneBufferGeometry"](gameScene.width, gameScene.depth),
+			new three__WEBPACK_IMPORTED_MODULE_5__["MeshBasicMaterial"]({map:texture, color: 0xffffff, opacity: 0.5, transparent: true})
 		);
 		floor.position.y = -0.5;
 		floor.rotation.x = -Math.PI / 2;
@@ -55742,11 +56185,11 @@ class ThreeEngine {
 		return floor;
 	}
 
-	loadEnemyModel (gameObject, position) {
+	loadTroopModel (gameObject, position) {
 		const model = './src/game/models/spider/spider.glb';
-		const loader = new three_gltf_loader__WEBPACK_IMPORTED_MODULE_5___default.a(this.loadingManager);
+		const loader = new three_gltf_loader__WEBPACK_IMPORTED_MODULE_6___default.a(this.loading.manager);
 		loader.load(model,
-			importedObject => this.addEnemyModel2Scene(importedObject, gameObject, position),
+			importedObject => this.addTroopModel2Scene(importedObject, gameObject, position),
 			xhr => console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' ),
 			error => console.log( 'An error happened while loading', error )
 		);
@@ -55754,35 +56197,22 @@ class ThreeEngine {
 		return true;
 	}
 
-	addEnemyModel2Scene (importedObject, gameObject, position) {
+	addTroopModel2Scene (model, gameObject, position) {
+		console.log('addTroopModel2Scene', model, gameObject, position);
 		let {scene} = this.tools;
 
-		console.log(importedObject);
-		let object = new three__WEBPACK_IMPORTED_MODULE_4__["Group"]();
+		let troop = new _Troop_js__WEBPACK_IMPORTED_MODULE_7__["default"](this);
+		troop.initObject3dFromGltfModel(model)
+			.initPosition(position)
+			.initAni(model)
+		;
 
-		let objectScale = 100;
-		importedObject.scene.scale.divideScalar(objectScale);
+		this.addBoundingBoxHelper(troop.model, troop.object);
 
-		object.add(importedObject.scene);
-		object
-			.translateX(position.x)
-			.translateY(position.y-0.5)
-			.translateZ(position.z);
+		troop.object.name = gameObject.title;
 
-		let box = new three__WEBPACK_IMPORTED_MODULE_4__["Box3"]().setFromObject( importedObject.scene );
-		console.log('box of enemy model', box);
-		let helper = new three__WEBPACK_IMPORTED_MODULE_4__["Box3Helper"](box, 0xffff00);
-		helper.name = 'Helper';
-		if( !this.helpersActive )
-			helper.visible = false;
-		object.add(helper);
-		this.helpers.add(helper);
-
-		scene.add(object);
-
-		object.name = gameObject.title;
-
-		this.objects.set(gameObject, {object: object, model: importedObject});
+		scene.add(troop.object);
+		this.objects.set(gameObject, troop);
 
 		return true;
 	}
@@ -55791,12 +56221,12 @@ class ThreeEngine {
 		// const model = './src/game/models/t-rex/T-Rex.glb';
 		// const loader = new GLTFLoader(this.loadingManager);
 		const model = './src/game/models/marine/marine_anims_core.json';
-		const loader = new three__WEBPACK_IMPORTED_MODULE_4__["ObjectLoader"](this.loadingManager);
+		const loader = new three__WEBPACK_IMPORTED_MODULE_5__["ObjectLoader"](this.loading.manager);
 		loader.load(model,
 			importedObject => {
 				let mesh = null;
 				importedObject.traverse( function ( child ) {
-					if ( child instanceof three__WEBPACK_IMPORTED_MODULE_4__["SkinnedMesh"] ) {
+					if ( child instanceof three__WEBPACK_IMPORTED_MODULE_5__["SkinnedMesh"] ) {
 						mesh = child;
 					}
 				} );
@@ -55810,71 +56240,43 @@ class ThreeEngine {
 		return true;
 	}
 
-	addPlayerModel2Scene (importedObject, gameObject, position) {
-		console.log(importedObject);
+	addPlayerModel2Scene (model, gameObject, position) {
+		console.log('addPlayerModel2Scene', model, gameObject, position);
 		let {scene, camera} = this.tools;
 		this.playerGameObject = gameObject;
 
-		// Attach camera to player
-		let object = new three__WEBPACK_IMPORTED_MODULE_4__["Group"]();
-		object.add(camera);
-		camera.name = 'PlayerCamera';
-		// set camera behind player
-		camera.position.set(0, 3, 3);
-		// camera look to object position but higher (like somebody looks from behind players head)
-		camera.lookAt(object.position.clone().add(new three__WEBPACK_IMPORTED_MODULE_4__["Vector3"](0, 2, 0)));
-		// default model is too big, so we must scale it down
-		let optimalScaleFoThisModel = 100;
-		importedObject.scale.divideScalar(optimalScaleFoThisModel);
-		let box = new three__WEBPACK_IMPORTED_MODULE_4__["Box3"]().setFromObject( importedObject );
-		let helper = new three__WEBPACK_IMPORTED_MODULE_4__["Box3Helper"](box, 0xffff00);
-		helper.name = 'Helper';
-		if( !this.helpersActive )
-			helper.visible = false;
-		object.add(helper);
-		this.helpers.add(helper);
+		let player = new _Player_js__WEBPACK_IMPORTED_MODULE_8__["default"](this);
 
-		object.add(importedObject);
+		player.initObject3dFromJsonModel(model)
+			.initPosition(position)
+			.bindCamera(camera)
+			.initAni(model);
 
-		this.playerAnimixer = new three__WEBPACK_IMPORTED_MODULE_4__["AnimationMixer"]( importedObject );
+		this.addBoundingBoxHelper(player.model, player.object);
 
-		object
-			.translateX(position.x)
-			.translateY(position.y-0.5)
-			.translateZ(position.z);
+		player.object.name = gameObject.title;
 
-		object.name = gameObject.title;
-
-		scene.add(object);
-
-		this.objects.set(gameObject, {object: object, model: importedObject});
-
-		this.playerAnimations = {
-			idle: this.playerAnimixer.clipAction( 'idle' ),
-			move: this.playerAnimixer.clipAction( 'run' ),
-		};
-
-		this.playerAnimations.idle.play();
+		scene.add(player.object);
+		this.objects.set(gameObject, player);
 
 		return true;
 	}
 
-	animatePlayer (event) {
-		console.log('animatePlayer', event.code, Object.keys(_KeyboardState_js__WEBPACK_IMPORTED_MODULE_1__["KeyboardState"].status));
+	animatePlayer () {
 		let {kbd} = this.tools;
-
 		//TODO: Разная анимация на разные направления (ходьба и бег вперед, пятиться, стрейф вправо и влево)
 		//TODO: Переключать анимацию через миксер с помощью weight
 		let movingStarted = (kbd.down("W") || kbd.down("A") || kbd.down("S") || kbd.down("D"));
 		let movingContinued = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
 		let movingReleased = (kbd.up("W") || kbd.up("A") || kbd.up("S") || kbd.up("D"));
+		//console.log('animatePlayer', [movingStarted, movingContinued, movingReleased], Object.keys(kbd.status));
 		if( movingStarted ) {
-			console.log('movingPressed');
+			console.log('animatePlayer movingStarted');
 			this.playerAnimations.move.play();
 		}
 		// full stop
 		if( movingReleased && !movingContinued ) {
-			console.log('movingReleased');
+			console.log('animatePlayer movingReleased');
 			this.playerAnimations.move.stop();
 			this.playerAnimations.idle.play();
 		}
@@ -55882,18 +56284,24 @@ class ThreeEngine {
 		return true;
 	}
 
-	movePlayer(event) {
-		console.log('movePlayer', event.code, Object.keys(_KeyboardState_js__WEBPACK_IMPORTED_MODULE_1__["KeyboardState"].status));
+	movePlayer() {
+		let {kbd} = this.tools;
+
+		let movingStarted = (kbd.down("W") || kbd.down("A") || kbd.down("S") || kbd.down("D"));
+		let movingContinued = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
+		let movingReleased = (kbd.up("W") || kbd.up("A") || kbd.up("S") || kbd.up("D"));
+		//console.log('movePlayer', [movingStarted, movingContinued, movingReleased], Object.keys(kbd.status));
+		// Stop moving if no keys down or pressed now
+		if (!movingStarted && !movingContinued) {
+			this.speedMod = 0;
+			return false;
+		}
+		// And move player in other hand
+		console.log('movePlayer');
+
 		let speedTreshold = 40;
 		if (this.speedMod < speedTreshold) {
 			this.speedMod++;
-		}
-
-		let {kbd} = this.tools;
-		let movingPressed = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
-		if (!movingPressed) {
-			this.speedMod = 0;
-			return false;
 		}
 
 		let playerObject = this.getObject(this.playerGameObject).object;
@@ -55915,7 +56323,7 @@ class ThreeEngine {
 		if (kbd.pressed("S")) z = 1;
 		if (kbd.pressed("A")) x = -1;
 
-		let destLocalVector = new three__WEBPACK_IMPORTED_MODULE_4__["Vector3"](x, y, z);
+		let destLocalVector = new three__WEBPACK_IMPORTED_MODULE_5__["Vector3"](x, y, z);
 		playerObject.translateOnAxis(destLocalVector, distance);
 
 		return true;
@@ -55936,17 +56344,13 @@ class ThreeEngine {
 
 		// Browser events
 		window.addEventListener('resize', () => this.resizeGame() );
+		//document.addEventListener("keypress", () =>  this.tools.kbd.update(), true);
 		document.addEventListener('pointerlockchange', () => this.togglePointerLock(), false);
 
 		// Dirty hacks for removeEventListener
-		this.rotateByMouseHandler = this.rotatePlayer.bind(this);
-		this.movePlayerHandler = this.movePlayer.bind(this);
-		this.animatePlayerHandler = this.animatePlayer.bind(this);
-
-		// Screenshot
-		document.addEventListener("keydown", event => this.takeScreenshot(event), true);
-		// Helpers
-		document.addEventListener("keydown", event => this.toggleHelpers(event), true);
+		// this.rotateByMouseHandler = Input.onMouseMove;
+		// this.eventKeyDownHandler = Input.onKeyDown;
+		// this.eventKeyUpHandler = this.animatePlayer.bind(this);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -55977,23 +56381,19 @@ class ThreeEngine {
 		if( document.pointerLockElement === renderer.domElement ) {
 			console.log('Pointer has locked by game');
 			// Enable interacting with Game world
-			renderer.domElement.addEventListener("mousemove", this.rotateByMouseHandler, true);
-			document.addEventListener("keydown",  this.animatePlayerHandler, true);
-			document.addEventListener("keyup",    this.animatePlayerHandler, true);
-			document.addEventListener("keydown",  this.movePlayerHandler, true);
-			document.addEventListener("keyup",    this.movePlayerHandler, true);
-			document.addEventListener("keypress", this.movePlayerHandler, true);
+			_Input_js__WEBPACK_IMPORTED_MODULE_2__["default"].enable(renderer);
+
+			// this.Keyboard('w, a, s, d', 'gameScene', this.animatePlayerHandler);
+			// this.Keyboard('w, a, s, d', 'gameScene', this.movePlayerHandler);
+
 			this.pointerLockRequested = true;
 		}
 		else {
-			// Disable interacting with Game world
-			renderer.domElement.removeEventListener("mousemove", this.rotateByMouseHandler, true);
-			document.removeEventListener("keydown",  this.animatePlayerHandler, true);
-			document.removeEventListener("keyup",    this.animatePlayerHandler, true);
-			document.removeEventListener("keydown",  this.movePlayerHandler, true);
-			document.removeEventListener("keyup",    this.movePlayerHandler, true);
-			document.removeEventListener("keypress", this.movePlayerHandler, true);
 			console.log('Pointer released');
+			// Disable interacting with Game world
+			_Input_js__WEBPACK_IMPORTED_MODULE_2__["default"].disable(renderer);
+
+			// this.Keyboard.deleteScope('gameScene');
 			this.pointerLockRequested = false;
 		}
 	}
@@ -56004,7 +56404,7 @@ class ThreeEngine {
 			return true;
 
 		let {renderer} = this.tools;
-		let screenshoter = new _tools_canvas2image_js__WEBPACK_IMPORTED_MODULE_3__["default"]();
+		let screenshoter = new _tools_canvas2image_js__WEBPACK_IMPORTED_MODULE_4__["default"]();
 		screenshoter.saveAsPNG(renderer.domElement);
 	}
 	// press H to toggle helpers
@@ -56017,6 +56417,115 @@ class ThreeEngine {
 	}
 }
 
+
+/***/ }),
+
+/***/ "./src/game/engines/Troop.js":
+/*!***********************************!*\
+  !*** ./src/game/engines/Troop.js ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Troop; });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _Unit_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Unit.js */ "./src/game/engines/Unit.js");
+
+
+
+class Troop extends _Unit_js__WEBPACK_IMPORTED_MODULE_1__["default"] {
+	constructor (engine) {
+		super(engine);
+	}
+}
+
+/***/ }),
+
+/***/ "./src/game/engines/Unit.js":
+/*!**********************************!*\
+  !*** ./src/game/engines/Unit.js ***!
+  \**********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Unit; });
+/* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! three */ "./node_modules/three/build/three.module.js");
+/* harmony import */ var _Game_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../Game.js */ "./src/game/Game.js");
+
+
+
+class Unit {
+	constructor (engine) {
+		console.log(engine);
+		this.engine = engine;
+		this.object = null;
+		this.model = null;
+		this.ani = {
+			mixer: null,
+			clips: [],
+			actions: {},
+		};
+	}
+
+	initObject3dFromJsonModel (model) {
+		this.model = model;
+		this.scaleModel();
+		let object = new three__WEBPACK_IMPORTED_MODULE_0__["Group"]();
+
+		object.add(model);
+		this.object = object;
+		return this;
+	}
+
+	initObject3dFromGltfModel (model) {
+		this.model = model.scene;
+		this.scaleModel();
+		let object = new three__WEBPACK_IMPORTED_MODULE_0__["Group"]();
+
+		object.add(model.scene);
+		this.object = object;
+		return this;
+	}
+
+	initPosition (position) {
+		this.object
+			.translateX(position.x)
+			.translateY(position.y-0.5)
+			.translateZ(position.z);
+		return this;
+	}
+
+	scaleModel () {
+		// rescale model - fit it to 2 meters height
+		let box = new three__WEBPACK_IMPORTED_MODULE_0__["Box3"]().setFromObject( this.model );
+		let optimalScaleFoThisModel = 2/box.max.y;
+		this.model.scale.multiplyScalar(optimalScaleFoThisModel);
+	}
+
+	initAni (model) {
+		this.ani.mixer = new three__WEBPACK_IMPORTED_MODULE_0__["AnimationMixer"]( model );
+		this.ani.clips = this.getAnimationsFromModel(model);
+		if( this.ani.clips.length ) {
+			for( let clip of this.ani.clips ) {
+				this.ani.actions[clip.name] = this.ani.mixer.clipAction(clip.name);
+			}
+		}
+
+		_Game_js__WEBPACK_IMPORTED_MODULE_1__["Event"].trigger("ThreeEngineUnit.onInitAnimationSuccess", this);
+		return this;
+	}
+
+	getAnimationsFromModel (model) {
+		let clipArray = model.geometry && model.geometry.animations || model.animations;
+		return clipArray;
+	}
+
+	update () {}
+}
 
 /***/ }),
 
