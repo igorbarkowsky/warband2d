@@ -18,4 +18,8 @@ var GameUtils = {
 	}
 }
 
-export {mixin, objectMaxKey};
+function getFileExtension (filename) {
+	return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+}
+
+export {mixin, objectMaxKey, getFileExtension};

@@ -31,7 +31,7 @@ export class Game {
 		// Initial settings for game
 		console.log('Init the Game', this);
 		//New scene
-		let NewScene = new GameScene({title: "Wonderful forest", width: 25, depth: 25, terrain:'bog'});
+		let NewScene = new GameScene({title: "Wonderful forest", width: 500, depth: 500, terrain:'bog'});
 		//Some units
 		let Player = new Hero({title: 'Richard Asshole', weight: 80, size: 'L', hp: 100, isPlayer: true, color: 0x0000ff});
 		let Enemy = new Troop({weight: 1, size: 'S', color:0xff0000});

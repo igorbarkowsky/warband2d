@@ -7,15 +7,19 @@ import img from "./../img/Tile_Floor_texture.png";
 import Canvas2Image from "./../tools/canvas2image.js";
 
 import * as THREE from "three";
+import * as CANNON from "cannon";
 import GLTFLoader from "three-gltf-loader";
 
 import Troop from './Troop.js';
 import Player from './Player.js';
 
+import * as Utils from './../Utils.js';
+
 export class ThreeEngine {
 	constructor() {
 		// scene objects
 		this.objects = new Map();
+		this.physics = {};
 		// scene, camera and renderer
 		this.tools = {};
 
@@ -139,6 +143,7 @@ export class ThreeEngine {
 		let floor = this.loadFloor(gameScene);
 		scene.add(floor);
 
+		this.initPhysics();
 		// Start clock sync
 		this.clock = new THREE.Clock(true);
 		// start animation loop
@@ -158,17 +163,49 @@ export class ThreeEngine {
 
 	// Maybe main function of this engine - render on each frame
 	render() {
-		let {scene, camera, renderer, kbd} = this.tools;
+		let {scene, camera, renderer} = this.tools;
 		this.delta = this.clock.getDelta();
-		kbd.update();
 
+		this.updatePhysics();
 		this.objects.forEach( (engineObject) => {
 			engineObject.update();
 		});
-		// this.animatePlayer();
-		// this.movePlayer();
 
 		renderer.render(scene, camera);
+	}
+
+	initPhysics () {
+		let world = new CANNON.World();
+		world.gravity.set(0,-10,0);
+		world.broadphase = new CANNON.NaiveBroadphase();
+		world.solver.iterations = 10;
+		//world.solver.tolerance = 0.001;
+		world.defaultContactMaterial.friction = 0.1;
+		world.defaultContactMaterial.contactEquationStiffness = 1e8;
+		world.defaultContactMaterial.contactEquationRegularizationTime = 3;
+
+		// Ground plane
+		let plane = new CANNON.Plane();
+		let groundBody = new CANNON.Body({ mass: 0 });
+		groundBody.addShape(plane);
+		groundBody.position.set(0,-0.5,0);
+		groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+		world.addBody(groundBody);
+
+		this.physics.world = world;
+	}
+
+	updatePhysics () {
+		if( this.delta > 0 ) {
+			this.physics.world.step(this.delta);
+			this.objects.forEach( (engineObject) => {
+				if( engineObject.body.inited !== true )
+					return;
+
+				engineObject.object.position.copy(engineObject.body.position);
+				engineObject.object.quaternion.copy(engineObject.body.quaternion);
+			});
+		}
 	}
 
 	getObject (gameObject) {
@@ -178,10 +215,19 @@ export class ThreeEngine {
 	addObject(gameObject, position, staticObjectFlag = false) {
 		console.log('ThreeEngine.addObject', gameObject, position, staticObjectFlag);
 
-		if (gameObject.isPlayer && gameObject.isPlayer === true)
-			return this.loadPlayerModel(gameObject, position);
-		else
-			return this.loadTroopModel(gameObject, position);
+		if (gameObject.isPlayer && gameObject.isPlayer === true) {
+			this.playerGameObject = gameObject;
+			const modelFile = './src/game/models/marine/marine_anims_core.json';
+			let player = new Player(this);
+			player.loadModel(modelFile, gameObject, position);
+		}
+		else {
+			const modelFile = './src/game/models/spider/spider.glb';
+			let troop = new Troop(this);
+			troop.loadModel(modelFile, gameObject, position);
+		}
+
+		return true;
 	}
 
 	addBoundingBoxHelper (model, object) {
@@ -217,81 +263,16 @@ export class ThreeEngine {
 		return floor;
 	}
 
-	loadTroopModel (gameObject, position) {
-		const model = './src/game/models/spider/spider.glb';
-		const loader = new GLTFLoader(this.loading.manager);
-		loader.load(model,
-			importedObject => this.addTroopModel2Scene(importedObject, gameObject, position),
-			xhr => console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' ),
-			error => console.log( 'An error happened while loading', error )
-		);
-
-		return true;
-	}
-
-	addTroopModel2Scene (model, gameObject, position) {
-		console.log('addTroopModel2Scene', model, gameObject, position);
+	addObject2Scene (unit, model, gameObject, position) {
+		console.log('ThreeEngine.addObject2Scene', unit, model, gameObject, position);
 		let {scene} = this.tools;
 
-		let troop = new Troop(this);
-		troop.initObject3dFromGltfModel(model)
-			.initPosition(position)
-			.initAni(model)
-		;
+		this.addBoundingBoxHelper(unit.model, unit.object);
+		unit.object.name = gameObject.title;
+		scene.add(unit.object);
+		unit.initPhysics(gameObject);
+		this.objects.set(gameObject, unit);
 
-		this.addBoundingBoxHelper(troop.model, troop.object);
-
-		troop.object.name = gameObject.title;
-
-		scene.add(troop.object);
-		this.objects.set(gameObject, troop);
-
-		return true;
-	}
-
-	loadPlayerModel (gameObject, position) {
-		// const model = './src/game/models/t-rex/T-Rex.glb';
-		// const loader = new GLTFLoader(this.loadingManager);
-		// noinspection SpellCheckingInspection
-		const model = './src/game/models/marine/marine_anims_core.json';
-		const loader = new THREE.ObjectLoader(this.loading.manager);
-		loader.load(model,
-			importedObject => {
-				let mesh = null;
-				importedObject.traverse( function ( child ) {
-					if ( child instanceof THREE.SkinnedMesh ) {
-						mesh = child;
-					}
-				} );
-				if( mesh )
-					this.addPlayerModel2Scene(mesh, gameObject, position)
-			},
-			xhr => console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' ),
-			error => console.log( 'An error happened while loading', error )
-		);
-
-		return true;
-	}
-
-	addPlayerModel2Scene (model, gameObject, position) {
-		console.log('addPlayerModel2Scene', model, gameObject, position);
-		let {scene, camera} = this.tools;
-		this.playerGameObject = gameObject;
-
-		let player = new Player(this);
-
-		player.initObject3dFromJsonModel(model)
-			.initPosition(position)
-			.bindCamera(camera)
-			.initAni(model);
-
-		//TODO: It doesnt work by some reason
-		this.addBoundingBoxHelper(player.model, player.object);
-
-		player.object.name = gameObject.title;
-
-		scene.add(player.object);
-		this.objects.set(gameObject, player);
 
 		return true;
 	}
@@ -302,6 +283,9 @@ export class ThreeEngine {
 		// Game events
 		Event.on( 'GameScene.Init', gameScene => this.setupScene(gameScene) );
 		Event.on( 'GameScene.addObject', (gameObject, position) => this.addObject(gameObject, position) );
+		Event.on('ThreeEngineUnit.SuccessInit', (unit, model, gameObject, position) => {
+			this.addObject2Scene(unit, model, gameObject, position);
+		});
 
 		// Browser events
 		window.addEventListener('resize', () => this.resizeGame() );

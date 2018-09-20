@@ -1,6 +1,6 @@
 "use strict";
 
-import * as Utils from "./utils.js";
+import * as Utils from "./Utils.js";
 import {Event} from "./Game.js";
 
 export class Autobattle {

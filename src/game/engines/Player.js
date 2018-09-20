@@ -1,5 +1,8 @@
 import {Event} from "./../Game.js";
+
 import * as THREE from "three";
+import * as CANNON from "cannon";
+
 import Troop from './Troop.js';
 import InputDesktop from './../InputDesktop.js';
 
@@ -7,13 +10,27 @@ export default class Player extends Troop {
 	constructor (engine) {
 		super(engine);
 		this.speedModifier = 0;
-		this.speedThreshold = 5;
+		this.speedThreshold = 50;
 		this.globalSpeedModifier = 2;
 		this.rotateMod = 0.0005;
 		this.moves = {};
 
 		this.initEventHandlers();
 	}
+
+	init (model, gameObject, position) {
+		let {camera} = this.engine.tools;
+		this.initObject3dFromModel(model)
+			.scaleModelTo(2)
+			.initPosition(position)
+			.bindCamera (camera)
+			.initAni(model)
+			//.initPhysics(gameObject)
+		;
+		Event.trigger('ThreeEngineUnit.SuccessInit', this, model, gameObject, position);
+		return this;
+	}
+
 
 	bindCamera (camera) {
 		// Attach camera to player
@@ -31,7 +48,12 @@ export default class Player extends Troop {
 		Event.on("InputDesktop.MouseMove", event => this.rotatePlayer(event));
 		Event.on("InputDesktop.KeyDown", event => this.onMoveStart(event));
 		Event.on("InputDesktop.KeyUp", event => this.onMoveEnd(event));
-		Event.on("ThreeEngineUnit.onInitAnimationSuccess", () => this.startIdleAnimation());
+		this.on("InitAnimationSuccess", () => this.startIdleAnimation());
+		// Делаем игрока устойчивым
+		this.on("InitPhysicsSuccess", () => {
+			this.body.fixedRotation = true;
+			this.body.updateMassProperties();
+		});
 	}
 
 	startIdleAnimation () {
@@ -91,12 +113,35 @@ export default class Player extends Troop {
 		if( !this.hasMoves() )
 			return false;
 
-		//console.log(this.moveQueue.size);
 		let destinationVector = new THREE.Vector3(0,0,0);
 		for( let d in this.moves )
 			destinationVector.add(InputDesktop.moveVectors[d]);
 
-		this.movePlayer(destinationVector);
+		this.movePlayerPhysic(destinationVector);
+	}
+
+	// Real physic move
+	movePlayerPhysic (directionVector) {
+		// Local vector
+		let moveDirection = new CANNON.Vec3(directionVector.x,
+			directionVector.y,
+			directionVector.z);
+		// Convert to World vector
+		let worldDirection = this.body.vectorToWorldFrame(moveDirection);
+
+		// calculate distance for single player move in one frame
+		//TODO: It related to outfit weight, agility and other player stats
+		//TODO: Animation must plays faster on faster movings
+		let initialSpeed = 1;//TODO: speed from Hero stats
+		let currentSpeed = initialSpeed + this.speedModifier*0.1;
+		// Unit cant move faster than threshold
+		if( currentSpeed > this.speedThreshold )
+			currentSpeed = this.speedThreshold;
+		else
+			this.speedModifier++;
+
+		// Apply new velocity in target vector (in world scope)
+		this.body.velocity = worldDirection.mult(currentSpeed);
 	}
 
 	movePlayer (directionVector) {
@@ -120,9 +165,14 @@ export default class Player extends Troop {
 	}
 
 	rotatePlayer (event) {
-		// Rotate player to left/right
-		this.object.rotateY(-event.movementX*this.rotateMod);
-		// Rotate camera to up/down
+		let angleY = -event.movementX*this.rotateMod;
+		let quatY = new CANNON.Quaternion();
+		quatY.setFromAxisAngle(new CANNON.Vec3(0,1,0), angleY).normalize();
+		this.body.quaternion = this.body.quaternion.mult(quatY);
+		//this.body.quaternion.copy(quatY);
+		// Rotate camera
+		// this.object.getObjectByName('PlayerCamera').rotateY(-event.movementX*this.rotateMod);
+
 		this.object.getObjectByName('PlayerCamera').rotateX(-event.movementY*this.rotateMod);
 	}
 }
