@@ -7,7 +7,7 @@ export default class Player extends Troop {
 	constructor (engine) {
 		super(engine);
 		this.speedModifier = 0;
-		this.speedThreshold = 25;
+		this.speedThreshold = 5;
 		this.globalSpeedModifier = 2;
 		this.rotateMod = 0.0005;
 		this.moves = {};
@@ -113,7 +113,6 @@ export default class Player extends Troop {
 		else
 			this.speedModifier++;
 
-		console.log(currentSpeed);
 		let distance = currentSpeed * this.engine.delta * this.globalSpeedModifier;
 		playerObject.translateOnAxis(directionVector, distance);
 

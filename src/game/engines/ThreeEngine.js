@@ -1,10 +1,8 @@
 "use strict";
 
 import {Event} from "./../Game.js";
-// import {KeyboardState} from "./../KeyboardState.js";
 import {KeyboardHelper as KeyboardState} from "./../KeyboardHelper.js";
 import Input from "./../Input.js";
-// import * as Keyboard from "keymaster";
 import img from "./../img/Tile_Floor_texture.png";
 import Canvas2Image from "./../tools/canvas2image.js";
 
@@ -20,14 +18,9 @@ export class ThreeEngine {
 		this.objects = new Map();
 		// scene, camera and renderer
 		this.tools = {};
-		// Controls settings
-		this.speedMod = 0;
-
-		// this.input = new Input();
 
 		// Player tools
 		this.playerGameObject = null;
-		this.playerAnimixer = null;
 
 		// Helpers
 		this.helpersActive = true;
@@ -86,7 +79,7 @@ export class ThreeEngine {
 	}
 
 	showLoadingScreen () {
-		if( this.loading.RESOURCES_LOADED == true )
+		if( this.loading.RESOURCES_LOADED === true )
 			return false;
 
 		let {renderer} = this.tools;
@@ -133,6 +126,7 @@ export class ThreeEngine {
 
 		if( this.helpersActive ) {
 			let Axes = new THREE.AxesHelper(20);
+			// noinspection JSUndefinedPropertyAssignment
 			Axes.name = 'Helper';
 			this.helpers.add(Axes);
 			scene.add(Axes);
@@ -168,7 +162,7 @@ export class ThreeEngine {
 		this.delta = this.clock.getDelta();
 		kbd.update();
 
-		this.objects.forEach( (engineObject, gameObject) => {
+		this.objects.forEach( (engineObject) => {
 			engineObject.update();
 		});
 		// this.animatePlayer();
@@ -183,7 +177,6 @@ export class ThreeEngine {
 
 	addObject(gameObject, position, staticObjectFlag = false) {
 		console.log('ThreeEngine.addObject', gameObject, position, staticObjectFlag);
-		let {scene, camera} = this.tools;
 
 		if (gameObject.isPlayer && gameObject.isPlayer === true)
 			return this.loadPlayerModel(gameObject, position);
@@ -194,11 +187,14 @@ export class ThreeEngine {
 	addBoundingBoxHelper (model, object) {
 		let box = new THREE.Box3().setFromObject( model );
 		let helper = new THREE.Box3Helper(box, 0xffff00);
+		// noinspection JSUndefinedPropertyAssignment
 		helper.name = 'Helper';
 		object.add(helper);
 
 		if( !this.helpersActive )
-			helper.visible = false;
+			{ // noinspection JSUndefinedPropertyAssignment
+				helper.visible = false;
+			}
 		this.helpers.add(helper);
 
 	}
@@ -256,6 +252,7 @@ export class ThreeEngine {
 	loadPlayerModel (gameObject, position) {
 		// const model = './src/game/models/t-rex/T-Rex.glb';
 		// const loader = new GLTFLoader(this.loadingManager);
+		// noinspection SpellCheckingInspection
 		const model = './src/game/models/marine/marine_anims_core.json';
 		const loader = new THREE.ObjectLoader(this.loading.manager);
 		loader.load(model,
@@ -288,6 +285,7 @@ export class ThreeEngine {
 			.bindCamera(camera)
 			.initAni(model);
 
+		//TODO: It doesnt work by some reason
 		this.addBoundingBoxHelper(player.model, player.object);
 
 		player.object.name = gameObject.title;
@@ -296,79 +294,6 @@ export class ThreeEngine {
 		this.objects.set(gameObject, player);
 
 		return true;
-	}
-
-	animatePlayer () {
-		let {kbd} = this.tools;
-		//TODO: Разная анимация на разные направления (ходьба и бег вперед, пятиться, стрейф вправо и влево)
-		//TODO: Переключать анимацию через миксер с помощью weight
-		let movingStarted = (kbd.down("W") || kbd.down("A") || kbd.down("S") || kbd.down("D"));
-		let movingContinued = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
-		let movingReleased = (kbd.up("W") || kbd.up("A") || kbd.up("S") || kbd.up("D"));
-		//console.log('animatePlayer', [movingStarted, movingContinued, movingReleased], Object.keys(kbd.status));
-		if( movingStarted ) {
-			console.log('animatePlayer movingStarted');
-			this.playerAnimations.move.play();
-		}
-		// full stop
-		if( movingReleased && !movingContinued ) {
-			console.log('animatePlayer movingReleased');
-			this.playerAnimations.move.stop();
-			this.playerAnimations.idle.play();
-		}
-
-		return true;
-	}
-
-	movePlayer() {
-		let {kbd} = this.tools;
-
-		let movingStarted = (kbd.down("W") || kbd.down("A") || kbd.down("S") || kbd.down("D"));
-		let movingContinued = (kbd.pressed("W") || kbd.pressed("A") || kbd.pressed("S") || kbd.pressed("D"));
-		let movingReleased = (kbd.up("W") || kbd.up("A") || kbd.up("S") || kbd.up("D"));
-		//console.log('movePlayer', [movingStarted, movingContinued, movingReleased], Object.keys(kbd.status));
-		// Stop moving if no keys down or pressed now
-		if (!movingStarted && !movingContinued) {
-			this.speedMod = 0;
-			return false;
-		}
-		// And move player in other hand
-		console.log('movePlayer');
-
-		let speedTreshold = 40;
-		if (this.speedMod < speedTreshold) {
-			this.speedMod++;
-		}
-
-		let playerObject = this.getObject(this.playerGameObject).object;
-
-		// calculate distance for single player move
-		//TODO: It related to outfit weight, agility and other player stats
-		let globalSpeedMod = 2;
-		let iniSpeed = 1;
-		let maxSpeed = 5;
-		let curSpeed = iniSpeed + this.speedMod*0.1;
-		if( curSpeed > maxSpeed )
-			curSpeed = maxSpeed;
-
-		// calculate move vector
-		let x = 0, y = 0, z = 0;
-		let distance = curSpeed*this.delta*globalSpeedMod;
-		if (kbd.pressed("W")) z = -1;
-		if (kbd.pressed("D")) x = 1;
-		if (kbd.pressed("S")) z = 1;
-		if (kbd.pressed("A")) x = -1;
-
-		let destLocalVector = new THREE.Vector3(x, y, z);
-		playerObject.translateOnAxis(destLocalVector, distance);
-
-		return true;
-	}
-
-	rotatePlayer(event) {
-		let playerObject = this.getObject(this.playerGameObject).object;
-		playerObject.rotateY(-event.movementX*0.0005);
-		playerObject.getObjectByName('PlayerCamera').rotateX(-event.movementY*0.0005)
 	}
 
 	setupEventsHandlers() {
@@ -380,13 +305,13 @@ export class ThreeEngine {
 
 		// Browser events
 		window.addEventListener('resize', () => this.resizeGame() );
-		//document.addEventListener("keypress", () =>  this.tools.kbd.update(), true);
 		document.addEventListener('pointerlockchange', () => this.togglePointerLock(), false);
 
 		// Dirty hacks for removeEventListener
 		// this.rotateByMouseHandler = Input.onMouseMove;
 		// this.eventKeyDownHandler = Input.onKeyDown;
-		// this.eventKeyUpHandler = this.animatePlayer.bind(this);
+		this.takeScreenshotHandler = this.takeScreenshot.bind(this);
+		this.toggleHelpersHandler = this.toggleHelpers.bind(this);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -418,6 +343,8 @@ export class ThreeEngine {
 			console.log('Pointer has locked by game');
 			// Enable interacting with Game world
 			Input.enable(renderer);
+			document.addEventListener("keydown",  this.takeScreenshotHandler, true);
+			document.addEventListener("keydown",  this.toggleHelpersHandler, true);
 
 			// this.Keyboard('w, a, s, d', 'gameScene', this.animatePlayerHandler);
 			// this.Keyboard('w, a, s, d', 'gameScene', this.movePlayerHandler);
@@ -428,6 +355,8 @@ export class ThreeEngine {
 			console.log('Pointer released');
 			// Disable interacting with Game world
 			Input.disable(renderer);
+			document.removeEventListener("keydown",  this.takeScreenshotHandler, true);
+			document.removeEventListener("keydown",  this.toggleHelpersHandler, true);
 
 			// this.Keyboard.deleteScope('gameScene');
 			this.pointerLockRequested = false;
@@ -436,7 +365,7 @@ export class ThreeEngine {
 
 	// press R to make screenshot
 	takeScreenshot (event) {
-		if( event.code != 'KeyR' )
+		if( event.code !== 'KeyR' )
 			return true;
 
 		let {renderer} = this.tools;
@@ -445,7 +374,7 @@ export class ThreeEngine {
 	}
 	// press H to toggle helpers
 	toggleHelpers (event) {
-		if( event.code != 'KeyH' )
+		if( event.code !== 'KeyH' )
 			return true;
 
 		this.helpersActive = !this.helpersActive;
