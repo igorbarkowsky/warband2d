@@ -10,15 +10,20 @@ export default class Player extends Troop {
 	constructor (engine) {
 		super(engine);
 		this.speedModifier = 0;
-		this.speedThreshold = 50;
+		this.speedModifierThreshold = 100;
 		this.globalSpeedModifier = 2;
 		this.rotateMod = 0.0005;
 		this.moves = {};
+
+		// When true - rotate camera left/right instead player
+		this.moveCameraModifier = false;
 
 		this.initEventHandlers();
 	}
 
 	init (model, gameObject, position) {
+		this.gameObject = gameObject;
+
 		let {camera} = this.engine.tools;
 		this.initObject3dFromModel(model)
 			.scaleModelTo(2)
@@ -46,6 +51,8 @@ export default class Player extends Troop {
 
 	initEventHandlers () {
 		Event.on("InputDesktop.MouseMove", event => this.rotatePlayer(event));
+		Event.on("InputDesktop.MouseDown", event => this.clickPlayer(event));
+		Event.on("InputDesktop.MouseUp", event => this.clickPlayer(event));
 		Event.on("InputDesktop.KeyDown", event => this.onMoveStart(event));
 		Event.on("InputDesktop.KeyUp", event => this.onMoveEnd(event));
 		this.on("InitAnimationSuccess", () => this.startIdleAnimation());
@@ -57,7 +64,18 @@ export default class Player extends Troop {
 	}
 
 	startIdleAnimation () {
-		this.ani.actions.idle.play();
+		// We use two animations to move - run and idle
+		this.ani.actions.run.fadeOut(this.engine.delta).play();
+		this.ani.actions.idle.fadeIn(this.engine.delta).play();
+	}
+
+	animationCrossfade (startAnimation, endAnimation, duration = 1, warp = false) {
+		endAnimation.time = 0;// Start end animation from first keyframe
+		endAnimation.enabled = true;// Must be enabled to be visible
+		endAnimation.setEffectiveTimeScale( 1 );
+		endAnimation.setEffectiveWeight( 1 );
+
+		startAnimation.crossFadeTo(endAnimation, duration, warp);
 	}
 
 	onMoveStart (event) {
@@ -72,7 +90,8 @@ export default class Player extends Troop {
 		this.moves[direction] = true;
 
 		//TODO: We can start tween motion or animation here
-		this.ani.actions.run.play();
+		this.animationCrossfade(this.ani.actions.idle, this.ani.actions.run, 2);
+
 		return true;
 	}
 
@@ -88,11 +107,11 @@ export default class Player extends Troop {
 		if( this.hasMoves() )
 			return true;
 
-		// Reduce speed modifier
+		// Reset speed modifier
 		this.speedModifier = 0;
+
 		//TODO: We can stop tween motion or animation here
-		this.ani.actions.run.stop();
-		this.ani.actions.idle.play();
+		this.animationCrossfade(this.ani.actions.run, this.ani.actions.idle, this.engine.delta*30);
 		return true;
 	}
 
@@ -113,32 +132,40 @@ export default class Player extends Troop {
 		if( !this.hasMoves() )
 			return false;
 
-		let destinationVector = new THREE.Vector3(0,0,0);
+		let localDirectionVector = new THREE.Vector3(0,0,0);
 		for( let d in this.moves )
-			destinationVector.add(InputDesktop.moveVectors[d]);
+			localDirectionVector.add(InputDesktop.moveVectors[d]);
 
-		this.movePlayerPhysic(destinationVector);
+		this.movePlayerPhysic(localDirectionVector);
 	}
 
 	// Real physic move
 	movePlayerPhysic (directionVector) {
-		// Local vector
+		// Translate THREE vector to CANNON Local vector
 		let moveDirection = new CANNON.Vec3(directionVector.x,
 			directionVector.y,
 			directionVector.z);
-		// Convert to World vector
+		// Convert local to world vector
 		let worldDirection = this.body.vectorToWorldFrame(moveDirection);
 
 		// calculate distance for single player move in one frame
 		//TODO: It related to outfit weight, agility and other player stats
 		//TODO: Animation must plays faster on faster movings
-		let initialSpeed = 1;//TODO: speed from Hero stats
-		let currentSpeed = initialSpeed + this.speedModifier*0.1;
-		// Unit cant move faster than threshold
-		if( currentSpeed > this.speedThreshold )
-			currentSpeed = this.speedThreshold;
+		//TODO: speed from Hero stats
+		// Let initial speed is a half of agility (10 agility = 5m/s for example)
+		let initialSpeed = this.gameObject.attrs.agility/2;
+		// Bonus to speed. One sprinter skill point is +5% to initial speed
+		initialSpeed += this.gameObject.attrs.agility* this.gameObject.skills.sprinter*0.05;
+		// Speed modifier is boost from keypress. It emulate from walk to run situation
+		let currentSpeedModifier = initialSpeed * this.speedModifier*0.01;
+		let currentSpeed = initialSpeed + currentSpeedModifier;
+		// Unit cant get speedModifier bonus more than threshold
+		if( this.speedModifier > this.speedModifierThreshold )
+			this.speedModifier = this.speedModifierThreshold;
 		else
 			this.speedModifier++;
+
+		currentSpeed *= this.globalSpeedModifier;
 
 		// Apply new velocity in target vector (in world scope)
 		this.body.velocity = worldDirection.mult(currentSpeed);
@@ -164,15 +191,28 @@ export default class Player extends Troop {
 		return true;
 	}
 
+	clickPlayer (event) {
+		if( event.type === 'mousedown' && event.button === 0 )
+			this.moveCameraModifier = true;
+		else if (event.type === 'mouseup' && event.button === 0 )
+			this.moveCameraModifier = false;
+	}
 	rotatePlayer (event) {
-		let angleY = -event.movementX*this.rotateMod;
-		let quatY = new CANNON.Quaternion();
-		quatY.setFromAxisAngle(new CANNON.Vec3(0,1,0), angleY).normalize();
-		this.body.quaternion = this.body.quaternion.mult(quatY);
-		//this.body.quaternion.copy(quatY);
 		// Rotate camera
-		// this.object.getObjectByName('PlayerCamera').rotateY(-event.movementX*this.rotateMod);
+		let camera = this.object.getObjectByName('PlayerCamera');
+		camera.rotateX(-event.movementY*this.rotateMod);
 
-		this.object.getObjectByName('PlayerCamera').rotateX(-event.movementY*this.rotateMod);
+		if( this.moveCameraModifier ) {
+			camera.rotateY(-event.movementX*this.rotateMod);
+		}
+		else {
+			// Rotate player left/right
+			let angleY = -event.movementX*this.rotateMod;
+			let quatY = new CANNON.Quaternion();
+			quatY.setFromAxisAngle(new CANNON.Vec3(0,1,0), angleY).normalize();
+			this.body.quaternion = this.body.quaternion.mult(quatY);
+		}
+
+
 	}
 }

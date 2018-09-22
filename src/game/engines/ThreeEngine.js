@@ -28,7 +28,7 @@ export class ThreeEngine {
 
 		// Helpers
 		this.helpersActive = true;
-		this.helpers = new Set();
+		this.helpers = new Map();
 
 		this.pointerLockRequested = false;
 		this.initLoading();
@@ -131,8 +131,8 @@ export class ThreeEngine {
 		if( this.helpersActive ) {
 			let Axes = new THREE.AxesHelper(20);
 			// noinspection JSUndefinedPropertyAssignment
-			Axes.name = 'Helper';
-			this.helpers.add(Axes);
+			Axes.name = 'AxesHelper';
+			this.helpers.set(Axes, Axes);
 			scene.add(Axes);
 		}
 
@@ -170,6 +170,7 @@ export class ThreeEngine {
 		this.objects.forEach( (engineObject) => {
 			engineObject.update();
 		});
+		//this.updateHelpers();
 
 		renderer.render(scene, camera);
 	}
@@ -208,6 +209,12 @@ export class ThreeEngine {
 		}
 	}
 
+	updateHelpers () {
+		this.helpers.forEach( (helper) => {
+			if( helper.name === 'Helper' ) helper.updateMatrixWorld();
+		});
+	}
+
 	getObject (gameObject) {
 		return this.objects.get(gameObject);
 	}
@@ -230,21 +237,6 @@ export class ThreeEngine {
 		return true;
 	}
 
-	addBoundingBoxHelper (model, object) {
-		let box = new THREE.Box3().setFromObject( model );
-		let helper = new THREE.Box3Helper(box, 0xffff00);
-		// noinspection JSUndefinedPropertyAssignment
-		helper.name = 'Helper';
-		object.add(helper);
-
-		if( !this.helpersActive )
-			{ // noinspection JSUndefinedPropertyAssignment
-				helper.visible = false;
-			}
-		this.helpers.add(helper);
-
-	}
-
 	loadFloor (gameScene) {
 		const textureLoader = new THREE.TextureLoader(this.loading.manager);
 
@@ -255,23 +247,45 @@ export class ThreeEngine {
 		});
 		let floor = new THREE.Mesh(
 			new THREE.PlaneBufferGeometry(gameScene.width, gameScene.depth),
-			new THREE.MeshBasicMaterial({map:texture, color: 0xffffff, opacity: 0.5, transparent: true})
+			new THREE.MeshBasicMaterial({map:texture, color: 0xffffff, opacity: 0.5, transparent: false})
 		);
-		floor.position.y = -0.5;
 		floor.rotation.x = -Math.PI / 2;
 
 		return floor;
 	}
 
-	addObject2Scene (unit, model, gameObject, position) {
-		console.log('ThreeEngine.addObject2Scene', unit, model, gameObject, position);
+	addBoundingBoxHelper (unit) {
+		// Get bounding box
+		let box = new THREE.Box3().setFromObject( unit.object );
+		// Now we know sizes of unit group object
+		let size = box.getSize(new THREE.Vector3());
+		// Local center of unit object - we must correct Y positioin bcoz object is translated by Y on half of his size
+		let objectCenter = new THREE.Vector3(0, size.y/2, 0);
+		// Translate Bbox to center and scale fir to unit object
+		box.setFromCenterAndSize(objectCenter, size);
+		// Create a helper
+		let helper = new THREE.Box3Helper(box, unit.gameObject.color);
+		// noinspection JSUndefinedPropertyAssignment
+		helper.name = 'Helper';
+		// Bind helper to object, not to scene - now helper can repeat all object moves and rotates
+		unit.object.add(helper);
+
+		if( !this.helpersActive )
+		{ // noinspection JSUndefinedPropertyAssignment
+			helper.visible = false;
+		}
+		this.helpers.set(unit, helper);
+	}
+
+	addObject2Scene (unit) {
+		console.log('ThreeEngine.addObject2Scene', unit);
 		let {scene} = this.tools;
 
-		this.addBoundingBoxHelper(unit.model, unit.object);
-		unit.object.name = gameObject.title;
+		this.addBoundingBoxHelper(unit);
+		unit.object.name = unit.gameObject.title;
 		scene.add(unit.object);
-		unit.initPhysics(gameObject);
-		this.objects.set(gameObject, unit);
+		unit.initPhysics(unit.gameObject);
+		this.objects.set(unit.gameObject, unit);
 
 
 		return true;
@@ -283,9 +297,7 @@ export class ThreeEngine {
 		// Game events
 		Event.on( 'GameScene.Init', gameScene => this.setupScene(gameScene) );
 		Event.on( 'GameScene.addObject', (gameObject, position) => this.addObject(gameObject, position) );
-		Event.on('ThreeEngineUnit.SuccessInit', (unit, model, gameObject, position) => {
-			this.addObject2Scene(unit, model, gameObject, position);
-		});
+		Event.on('ThreeEngineUnit.SuccessInit', unit => this.addObject2Scene(unit) );
 
 		// Browser events
 		window.addEventListener('resize', () => this.resizeGame() );

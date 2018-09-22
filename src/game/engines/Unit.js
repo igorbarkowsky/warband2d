@@ -14,6 +14,7 @@ export default class Unit {
 		this.object = null;
 		this.model = null;
 		this.body = null;
+		this.gameObject = null;
 		this.ani = {
 			mixer: null,
 			clips: [],
@@ -22,19 +23,12 @@ export default class Unit {
 	}
 
 	loadModel (modelFile, gameObject, position, onSuccessLoadModelCallback = undefined) {
-		let type = undefined;
+		let file = modelFile.file || modelFile;
+		let type = modelFile.type;
 
-		if( modelFile instanceof String ) {
-			let type = undefined;
-		}
-		else if( modelFile instanceof Object ) {
-			let {file: modelFile, type} = modelFile;
-		}
+		if( !type )
+			type = Utils.getFileExtension(modelFile);
 
-		if( !type ) {
-			let ext = Utils.getFileExtension(modelFile);
-			type = ext;
-		}
 		let loader, callback;
 		switch( type ) {
 			case 'gltf':
@@ -77,14 +71,15 @@ export default class Unit {
 	}
 
 	init (model, gameObject, position) {
-		console.log('Unit.init', model, gameObject, position);
+		this.gameObject = gameObject;
+
 		this.initObject3dFromModel(model)
 			.scaleModelTo(1)
 			.initPosition(position)
 			.initAni(model)
 			//.initPhysics(gameObject)
 		;
-		Event.trigger('ThreeEngineUnit.SuccessInit', this, model, gameObject, position);
+		Event.trigger('ThreeEngineUnit.SuccessInit', this);
 		return this;
 	}
 
@@ -100,15 +95,18 @@ export default class Unit {
 	scaleModelTo (scaleTo = 2) {
 		// rescale model - fit it to 2 meters height
 		let box = new THREE.Box3().setFromObject( this.model );
-		let optimalScaleFoThisModel = scaleTo/box.max.y;
+		let optimalScaleFoThisModel = scaleTo / this.getModelSize().y;
 		this.model.scale.multiplyScalar(optimalScaleFoThisModel);
 		return this;
 	}
 
+	getModelSize () { return new THREE.Box3().setFromObject( this.model ).getSize(); }
+	getObjectSize () { return new THREE.Box3().setFromObject( this.object ).getSize(); }
+
 	initPosition (position) {
 		this.object
 			.translateX(position.x)
-			.translateY(position.y-0.5)
+			.translateY(this.getObjectSize().y/2)
 			.translateZ(position.z);
 		return this;
 	}

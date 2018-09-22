@@ -90,10 +90,10 @@
 /*!******************************************!*\
   !*** ./node_modules/cannon/package.json ***!
   \******************************************/
-/*! exports provided: _from, _id, _inBundle, _integrity, _location, _phantomChildren, _requested, _requiredBy, _resolved, _spec, _where, author, bugs, bundleDependencies, dependencies, deprecated, description, devDependencies, engines, homepage, keywords, licenses, main, name, repository, version, default */
+/*! exports provided: _args, _from, _id, _inBundle, _integrity, _location, _phantomChildren, _requested, _requiredBy, _resolved, _spec, _where, author, bugs, dependencies, description, devDependencies, engines, homepage, keywords, licenses, main, name, repository, version, default */
 /***/ (function(module) {
 
-module.exports = {"_from":"github:schteppe/cannon.js","_id":"cannon@0.6.2","_inBundle":false,"_integrity":"","_location":"/cannon","_phantomChildren":{},"_requested":{"type":"git","raw":"github:schteppe/cannon.js","rawSpec":"github:schteppe/cannon.js","saveSpec":"github:schteppe/cannon.js","fetchSpec":null,"gitCommittish":null},"_requiredBy":["#USER","/"],"_resolved":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_spec":"github:schteppe/cannon.js","_where":"C:\\Users\\user\\Documents\\warband2d","author":{"name":"Stefan Hedman","email":"schteppe@gmail.com","url":"http://steffe.se"},"bugs":{"url":"https://github.com/schteppe/cannon.js/issues"},"bundleDependencies":false,"dependencies":{},"deprecated":false,"description":"A lightweight 3D physics engine written in JavaScript.","devDependencies":{"browserify":"*","grunt":"~0.4.0","grunt-browserify":"^2.1.4","grunt-contrib-concat":"~0.1.3","grunt-contrib-jshint":"~0.1.1","grunt-contrib-nodeunit":"^0.4.1","grunt-contrib-uglify":"^0.5.1","grunt-contrib-yuidoc":"^0.5.2","jshint":"latest","nodeunit":"^0.9.0","uglify-js":"latest"},"engines":{"node":"*"},"homepage":"https://github.com/schteppe/cannon.js","keywords":["cannon.js","cannon","physics","engine","3d"],"licenses":[{"type":"MIT"}],"main":"./src/Cannon.js","name":"cannon","repository":{"type":"git","url":"git+https://github.com/schteppe/cannon.js.git"},"version":"0.6.2"};
+module.exports = {"_args":[["github:schteppe/cannon.js","C:\\warband"]],"_from":"github:schteppe/cannon.js","_id":"cannon@github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_inBundle":false,"_integrity":"","_location":"/cannon","_phantomChildren":{},"_requested":{"type":"git","raw":"github:schteppe/cannon.js","rawSpec":"github:schteppe/cannon.js","saveSpec":"github:schteppe/cannon.js","fetchSpec":null,"gitCommittish":null},"_requiredBy":["/"],"_resolved":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_spec":"github:schteppe/cannon.js","_where":"C:\\warband","author":{"name":"Stefan Hedman","email":"schteppe@gmail.com","url":"http://steffe.se"},"bugs":{"url":"https://github.com/schteppe/cannon.js/issues"},"dependencies":{},"description":"A lightweight 3D physics engine written in JavaScript.","devDependencies":{"browserify":"*","grunt":"~0.4.0","grunt-browserify":"^2.1.4","grunt-contrib-concat":"~0.1.3","grunt-contrib-jshint":"~0.1.1","grunt-contrib-nodeunit":"^0.4.1","grunt-contrib-uglify":"^0.5.1","grunt-contrib-yuidoc":"^0.5.2","jshint":"latest","nodeunit":"^0.9.0","uglify-js":"latest"},"engines":{"node":"*"},"homepage":"https://github.com/schteppe/cannon.js","keywords":["cannon.js","cannon","physics","engine","3d"],"licenses":[{"type":"MIT"}],"main":"./src/Cannon.js","name":"cannon","repository":{"type":"git","url":"git+https://github.com/schteppe/cannon.js.git"},"version":"0.6.2"};
 
 /***/ }),
 
@@ -66111,6 +66111,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Party_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Party.js */ "./src/game/Party.js");
 /* harmony import */ var _Autobattle_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./Autobattle.js */ "./src/game/Autobattle.js");
 /* harmony import */ var _engines_GameEngineFactory_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./engines/GameEngineFactory.js */ "./src/game/engines/GameEngineFactory.js");
+/* harmony import */ var _data_defaultPlayerStats_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./data/defaultPlayerStats.js */ "./src/game/data/defaultPlayerStats.js");
+/* harmony import */ var _data_defaultTroopStats_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./data/defaultTroopStats.js */ "./src/game/data/defaultTroopStats.js");
+
+
+
 
 
 
@@ -66146,8 +66151,10 @@ class Game {
 		//New scene
 		let NewScene = new _GameScene_js__WEBPACK_IMPORTED_MODULE_3__["GameScene"]({title: "Wonderful forest", width: 500, depth: 500, terrain:'bog'});
 		//Some units
-		let Player = new _Hero_js__WEBPACK_IMPORTED_MODULE_1__["Hero"]({title: 'Richard Asshole', weight: 80, size: 'L', hp: 100, isPlayer: true, color: 0x0000ff});
-		let Enemy = new _Troop_js__WEBPACK_IMPORTED_MODULE_2__["Troop"]({weight: 1, size: 'S', color:0xff0000});
+		let Player = new _Hero_js__WEBPACK_IMPORTED_MODULE_1__["Hero"]({title: 'Richard Asshole', weight: 100, size: 'L', hp: 100, isPlayer: true, color: 0x0000ff},
+			_data_defaultPlayerStats_js__WEBPACK_IMPORTED_MODULE_7__["default"].attributes, _data_defaultPlayerStats_js__WEBPACK_IMPORTED_MODULE_7__["default"].skills, _data_defaultPlayerStats_js__WEBPACK_IMPORTED_MODULE_7__["default"].proficiencies);
+		let Enemy = new _Troop_js__WEBPACK_IMPORTED_MODULE_2__["Troop"]({weight: 50, size: 'S', color:0xff0000},
+			_data_defaultTroopStats_js__WEBPACK_IMPORTED_MODULE_8__["default"].attributes, _data_defaultTroopStats_js__WEBPACK_IMPORTED_MODULE_8__["default"].skills, _data_defaultTroopStats_js__WEBPACK_IMPORTED_MODULE_8__["default"].proficiencies);
 
 		this.objects = {
 			NewScene, 
@@ -66163,8 +66170,8 @@ class Game {
 			Enemy,
 		} = this.objects;
 		// This is a tests for future game
-		NewScene.addObject(Player, {x:7, y: 0, z: 7});
-		NewScene.addObject(Enemy, {x:3, y: 0, z: 3});
+		NewScene.addObject(Player, {x:20, y: 0, z: 20});
+		NewScene.addObject(Enemy, {x:10, y: 0, z: 10});
 	}
 
 	setupEventsHandlers () {
@@ -66347,6 +66354,8 @@ class Input {
 	// Register all possible events from input devices and translate it to target classes
 	static enable (renderer) {
 		renderer.domElement.addEventListener("mousemove", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseMove, true);
+		renderer.domElement.addEventListener("mousedown", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseDown, true);
+		renderer.domElement.addEventListener("mouseup", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseUp, true);
 		document.addEventListener("keydown",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyDown, true);
 		document.addEventListener("keypress",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyPress, true);
 		document.addEventListener("keyup",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyUp, true);
@@ -66354,6 +66363,8 @@ class Input {
 
 	static disable (renderer) {
 		renderer.domElement.removeEventListener("mousemove", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseMove, true);
+		renderer.domElement.removeEventListener("mousedown", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseDown, true);
+		renderer.domElement.removeEventListener("mouseup", _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onMouseUp, true);
 		document.removeEventListener("keydown",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyDown, true);
 		document.removeEventListener("keypress",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyPress, true);
 		document.removeEventListener("keyup",  _InputDesktop_js__WEBPACK_IMPORTED_MODULE_0__["default"].onKeyUp, true);
@@ -66401,7 +66412,16 @@ class InputDesktop {
 	}
 
 	static onMouseMove (event) {
+		event.preventDefault();
 		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.MouseMove", event);
+	}
+	static onMouseDown (event) {
+		event.preventDefault();
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.MouseDown", event);
+	}
+	static onMouseUp (event) {
+		event.preventDefault();
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger("InputDesktop.MouseUp", event);
 	}
 
 	static keyName(keyCode ) {
@@ -66840,69 +66860,147 @@ class Troop extends _Unit_js__WEBPACK_IMPORTED_MODULE_1__["Unit"] {
 
 		let {
 			type = 'support',
-            xp = 0,
-            lvl = 1,
-        } = settings;
+				xp = 0,
+				lvl = 1,
+		} = settings;
 		let unitSettings = {
 			type,
-            xp,
-            lvl,
-        };
+			xp,
+			lvl,
+		};
 		Object.assign(this, unitSettings);
 
 		// Generate normal name
-		if( this.title == 'Noname unit' ) {
+		if( this.title === 'Noname unit' ) {
 			this.title = new _data_NameGenerator_js__WEBPACK_IMPORTED_MODULE_2__["NameGenerator"]().generateName();
 		}
 
-		this.attrs = {
-			strength: 1,
-			agility:1,
-			intellect:1,
-			charisma:1,
-		};
+		this.attrs = {};
+		this.skills = {};
+		this.profs = {};
 
-		this.skills = {
-			ironflesh: 0, // Reduce enemy damage
-			striker: 0, // Strikes take more damage, increase chance for critical strike
-			skirmisher: 0, // Operate throw weapon faster, increase it damage
-			bowman: 0, // Operate your bow faster, increase bow damage and stability
-			shield: 0, // Operate your shield faster, more covering
-			weaponmaster: 0, // Can upgrade your profs to higher levels. Lower chance to break weapon in a battle.
-			outfitmaster: 0, // Lower chance to break in a battle
-			sprinter: 0, // Can move faster, improve stamina
-			horseman: 0, // Can ride faster. Some horses require high skill.
-			horseshooter: 0, // Can shoot from horse with more stability
-			looter: 0, // Increase loot and it quality
-			trainer: 0, // Can train other units with lower lvl
-			tactic: 0, // Get unit advance in battles
-			pathfinder: 0, // Get more information from track, find better paths, increase speed on map
-			scout: 0, // Scouting and party seeing range
-			shipman: 0, // Experienced sailor and ship captain improve speed in sea travels
-			thief: 0, // Art of sneaking
-			trader: 0, // Better prices
-			stockman: 0, // Inventory management, chests, stocks
-			craftman: 0, // Craftmanship
-			surgeon: 0, // Save lifes of heavy wounded party members
-			nurse: 0, // Speed up hp ressurect after battles for all party members
-			firstaid: 0, // Heal yourself in a battle
-			engineer: 0, // Speed up construction
-			pervuasion: 0,
-			leadership: 0, // Can lead more units in party, improve morale
-			admiral: 0, // Can lead more ships, improve morale
-		};
-
-		this.profs = {
-			onehanded: 0,
-			twohanded:0,
-			polearms:0,
-			bows:0,
-			crossbows:0,
-			grenades:0,
-			firearms:0,
-		};
-
+		this
+			.initAttributes(attributes)
+			.initSkills(skills)
+			.initProficiencies(proficiencies)
+		;
+		
 		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger('Troop.Created', this);
+	}
+
+	initAttributes (attributes) {
+		let {
+			strength = 1,
+			agility = 1,
+			intellect = 1,
+			charisma = 1,
+		} = attributes;
+		
+		let troopAttrs = {
+			strength,
+			agility,
+			intellect,
+			charisma,
+		};
+		
+		Object.assign(this.attrs, troopAttrs);
+		Object.freeze(this.attrs);
+		
+		return this;
+	}
+	
+	initSkills (skills) {
+		let {
+			ironflesh = 0, // Reduce enemy damage
+			striker = 0, // Strikes take more damage, increase chance for critical strike
+			skirmisher = 0, // Operate throw weapon faster, increase it damage
+			bowman = 0, // Operate your bow faster, increase bow damage and stability
+			shield = 0, // Operate your shield faster, more covering
+			weaponmaster = 0, // Can upgrade your profs to higher levels. Lower chance to break weapon in a battle.
+			outfitmaster = 0, // Lower chance to break in a battle
+			sprinter = 0, // Can move faster, improve stamina
+			horseman = 0, // Can ride faster. Some horses require high skill.
+			horseshooter = 0, // Can shoot from horse with more stability
+			looter = 0, // Increase loot and it quality
+			trainer = 0, // Can train other units with lower lvl
+			tactic = 0, // Get unit advance in battles
+			pathfinder = 0, // Get more information from track, find better paths, increase speed on map
+			scout = 0, // Scouting and party seeing range
+			shipman = 0, // Experienced sailor and ship captain improve speed in sea travels
+			thief = 0, // Art of sneaking
+			trader = 0, // Better prices
+			stockman = 0, // Inventory management, chests, stocks
+			craftman = 0, // Craftmanship
+			surgeon = 0, // Save lifes of heavy wounded party members
+			nurse = 0, // Speed up hp ressurect after battles for all party members
+			firstaid = 0, // Heal yourself in a battle
+			engineer = 0, // Speed up construction
+			pervuasion = 0,
+			leadership = 0, // Can lead more units in party, improve morale
+			admiral = 0, // Can lead more ships, improve morale
+		} = skills;
+		
+		let troopSkills = {
+			ironflesh, 
+			striker,
+			skirmisher,
+			bowman, 
+			shield, 
+			weaponmaster, 
+			outfitmaster, 
+			sprinter, 
+			horseman, 
+			horseshooter, 
+			looter, 
+			trainer, 
+			tactic, 
+			pathfinder, 
+			scout, 
+			shipman, 
+			thief, 
+			trader, 
+			stockman, 
+			craftman, 
+			surgeon, 
+			nurse, 
+			firstaid, 
+			engineer, 
+			pervuasion,
+			leadership, 
+			admiral,
+		};
+
+		Object.assign(this.skills, troopSkills);
+		Object.freeze(this.skills);
+
+		return this;
+	}
+
+	initProficiencies (proficiencies) {
+		let {
+			onehanded = 0,
+			twohanded = 0,
+			polearms = 0,
+			bows = 0,
+			crossbows = 0,
+			grenades = 0,
+			firearms = 0,
+		} = proficiencies;
+
+		let troopProfs = {
+			onehanded,
+			twohanded,
+			polearms,
+			bows,
+			crossbows,
+			grenades,
+			firearms,
+		};
+
+		Object.assign(this.profs, troopProfs);
+		Object.freeze(this.profs);
+
+		return this;
 	}
 
 	setupEventsHandlers () {}
@@ -67035,6 +67133,123 @@ class NameGenerator {
 	}
 }
 
+
+/***/ }),
+
+/***/ "./src/game/data/defaultPlayerStats.js":
+/*!*********************************************!*\
+  !*** ./src/game/data/defaultPlayerStats.js ***!
+  \*********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ({
+	attributes: {
+		strength: 6,
+		agility: 6,
+		intellect: 6,
+		charisma: 6,
+	}, 
+	skills: {
+		ironflesh: 0, 
+		striker: 0, 
+		skirmisher: 0, 
+		bowman: 0, 
+		shield: 0, 
+		weaponmaster: 0, 
+		outfitmaster: 0, 
+		sprinter: 0, 
+		horseman: 0, 
+		horseshooter: 0, 
+		looter: 0, 
+		trainer: 0, 
+		tactic: 0, 
+		pathfinder: 0, 
+		scout: 0, 
+		shipman: 0, 
+		thief: 0, 
+		trader: 0, 
+		stockman: 0, 
+		craftman: 0, 
+		surgeon: 0, 
+		nurse: 0, 
+		firstaid: 0, 
+		engineer: 0, 
+		pervuasion: 0,
+		leadership: 0, 
+		admiral: 0, 
+	}, 
+	proficiencies: {
+		onehanded: 0,
+		twohanded: 0,
+		polearms: 0,
+		bows: 0,
+		crossbows: 0,
+		grenades: 0,
+		firearms: 0,
+
+	},
+});
+
+/***/ }),
+
+/***/ "./src/game/data/defaultTroopStats.js":
+/*!********************************************!*\
+  !*** ./src/game/data/defaultTroopStats.js ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ({
+	attributes: {
+		strength: 3,
+		agility: 3,
+		intellect: 3,
+		charisma: 3,
+	},
+	skills: {
+		ironflesh: 0,
+		striker: 0,
+		skirmisher: 0,
+		bowman: 0,
+		shield: 0,
+		weaponmaster: 0,
+		outfitmaster: 0,
+		sprinter: 0,
+		horseman: 0,
+		horseshooter: 0,
+		looter: 0,
+		trainer: 0,
+		tactic: 0,
+		pathfinder: 0,
+		scout: 0,
+		shipman: 0,
+		thief: 0,
+		trader: 0,
+		stockman: 0,
+		craftman: 0,
+		surgeon: 0,
+		nurse: 0,
+		firstaid: 0,
+		engineer: 0,
+		pervuasion: 0,
+		leadership: 0,
+		admiral: 0,
+	},
+	proficiencies: {
+		onehanded: 0,
+		twohanded: 0,
+		polearms: 0,
+		bows: 0,
+		crossbows: 0,
+		grenades: 0,
+		firearms: 0,
+	},
+});
 
 /***/ }),
 
@@ -70861,15 +71076,20 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 	constructor (engine) {
 		super(engine);
 		this.speedModifier = 0;
-		this.speedThreshold = 50;
+		this.speedModifierThreshold = 100;
 		this.globalSpeedModifier = 2;
 		this.rotateMod = 0.0005;
 		this.moves = {};
+
+		// When true - rotate camera left/right instead player
+		this.moveCameraModifier = false;
 
 		this.initEventHandlers();
 	}
 
 	init (model, gameObject, position) {
+		this.gameObject = gameObject;
+
 		let {camera} = this.engine.tools;
 		this.initObject3dFromModel(model)
 			.scaleModelTo(2)
@@ -70897,6 +71117,8 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 
 	initEventHandlers () {
 		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.MouseMove", event => this.rotatePlayer(event));
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.MouseDown", event => this.clickPlayer(event));
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.MouseUp", event => this.clickPlayer(event));
 		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.KeyDown", event => this.onMoveStart(event));
 		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on("InputDesktop.KeyUp", event => this.onMoveEnd(event));
 		this.on("InitAnimationSuccess", () => this.startIdleAnimation());
@@ -70908,7 +71130,18 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 	}
 
 	startIdleAnimation () {
-		this.ani.actions.idle.play();
+		// We use two animations to move - run and idle
+		this.ani.actions.run.fadeOut(this.engine.delta).play();
+		this.ani.actions.idle.fadeIn(this.engine.delta).play();
+	}
+
+	animationCrossfade (startAnimation, endAnimation, duration = 1, warp = false) {
+		endAnimation.time = 0;// Start end animation from first keyframe
+		endAnimation.enabled = true;// Must be enabled to be visible
+		endAnimation.setEffectiveTimeScale( 1 );
+		endAnimation.setEffectiveWeight( 1 );
+
+		startAnimation.crossFadeTo(endAnimation, duration, warp);
 	}
 
 	onMoveStart (event) {
@@ -70923,7 +71156,8 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 		this.moves[direction] = true;
 
 		//TODO: We can start tween motion or animation here
-		this.ani.actions.run.play();
+		this.animationCrossfade(this.ani.actions.idle, this.ani.actions.run, 2);
+
 		return true;
 	}
 
@@ -70939,11 +71173,11 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 		if( this.hasMoves() )
 			return true;
 
-		// Reduce speed modifier
+		// Reset speed modifier
 		this.speedModifier = 0;
+
 		//TODO: We can stop tween motion or animation here
-		this.ani.actions.run.stop();
-		this.ani.actions.idle.play();
+		this.animationCrossfade(this.ani.actions.run, this.ani.actions.idle, this.engine.delta*30);
 		return true;
 	}
 
@@ -70964,32 +71198,40 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 		if( !this.hasMoves() )
 			return false;
 
-		let destinationVector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](0,0,0);
+		let localDirectionVector = new three__WEBPACK_IMPORTED_MODULE_1__["Vector3"](0,0,0);
 		for( let d in this.moves )
-			destinationVector.add(_InputDesktop_js__WEBPACK_IMPORTED_MODULE_4__["default"].moveVectors[d]);
+			localDirectionVector.add(_InputDesktop_js__WEBPACK_IMPORTED_MODULE_4__["default"].moveVectors[d]);
 
-		this.movePlayerPhysic(destinationVector);
+		this.movePlayerPhysic(localDirectionVector);
 	}
 
 	// Real physic move
 	movePlayerPhysic (directionVector) {
-		// Local vector
+		// Translate THREE vector to CANNON Local vector
 		let moveDirection = new cannon__WEBPACK_IMPORTED_MODULE_2__["Vec3"](directionVector.x,
 			directionVector.y,
 			directionVector.z);
-		// Convert to World vector
+		// Convert local to world vector
 		let worldDirection = this.body.vectorToWorldFrame(moveDirection);
 
 		// calculate distance for single player move in one frame
 		//TODO: It related to outfit weight, agility and other player stats
 		//TODO: Animation must plays faster on faster movings
-		let initialSpeed = 1;//TODO: speed from Hero stats
-		let currentSpeed = initialSpeed + this.speedModifier*0.1;
-		// Unit cant move faster than threshold
-		if( currentSpeed > this.speedThreshold )
-			currentSpeed = this.speedThreshold;
+		//TODO: speed from Hero stats
+		// Let initial speed is a half of agility (10 agility = 5m/s for example)
+		let initialSpeed = this.gameObject.attrs.agility/2;
+		// Bonus to speed. One sprinter skill point is +5% to initial speed
+		initialSpeed += this.gameObject.attrs.agility* this.gameObject.skills.sprinter*0.05;
+		// Speed modifier is boost from keypress. It emulate from walk to run situation
+		let currentSpeedModifier = initialSpeed * this.speedModifier*0.01;
+		let currentSpeed = initialSpeed + currentSpeedModifier;
+		// Unit cant get speedModifier bonus more than threshold
+		if( this.speedModifier > this.speedModifierThreshold )
+			this.speedModifier = this.speedModifierThreshold;
 		else
 			this.speedModifier++;
+
+		currentSpeed *= this.globalSpeedModifier;
 
 		// Apply new velocity in target vector (in world scope)
 		this.body.velocity = worldDirection.mult(currentSpeed);
@@ -71015,16 +71257,29 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 		return true;
 	}
 
+	clickPlayer (event) {
+		if( event.type === 'mousedown' && event.button === 0 )
+			this.moveCameraModifier = true;
+		else if (event.type === 'mouseup' && event.button === 0 )
+			this.moveCameraModifier = false;
+	}
 	rotatePlayer (event) {
-		let angleY = -event.movementX*this.rotateMod;
-		let quatY = new cannon__WEBPACK_IMPORTED_MODULE_2__["Quaternion"]();
-		quatY.setFromAxisAngle(new cannon__WEBPACK_IMPORTED_MODULE_2__["Vec3"](0,1,0), angleY).normalize();
-		this.body.quaternion = this.body.quaternion.mult(quatY);
-		//this.body.quaternion.copy(quatY);
 		// Rotate camera
-		// this.object.getObjectByName('PlayerCamera').rotateY(-event.movementX*this.rotateMod);
+		let camera = this.object.getObjectByName('PlayerCamera');
+		camera.rotateX(-event.movementY*this.rotateMod);
 
-		this.object.getObjectByName('PlayerCamera').rotateX(-event.movementY*this.rotateMod);
+		if( this.moveCameraModifier ) {
+			camera.rotateY(-event.movementX*this.rotateMod);
+		}
+		else {
+			// Rotate player left/right
+			let angleY = -event.movementX*this.rotateMod;
+			let quatY = new cannon__WEBPACK_IMPORTED_MODULE_2__["Quaternion"]();
+			quatY.setFromAxisAngle(new cannon__WEBPACK_IMPORTED_MODULE_2__["Vec3"](0,1,0), angleY).normalize();
+			this.body.quaternion = this.body.quaternion.mult(quatY);
+		}
+
+
 	}
 }
 
@@ -71084,7 +71339,7 @@ class ThreeEngine {
 
 		// Helpers
 		this.helpersActive = true;
-		this.helpers = new Set();
+		this.helpers = new Map();
 
 		this.pointerLockRequested = false;
 		this.initLoading();
@@ -71187,8 +71442,8 @@ class ThreeEngine {
 		if( this.helpersActive ) {
 			let Axes = new three__WEBPACK_IMPORTED_MODULE_5__["AxesHelper"](20);
 			// noinspection JSUndefinedPropertyAssignment
-			Axes.name = 'Helper';
-			this.helpers.add(Axes);
+			Axes.name = 'AxesHelper';
+			this.helpers.set(Axes, Axes);
 			scene.add(Axes);
 		}
 
@@ -71226,6 +71481,7 @@ class ThreeEngine {
 		this.objects.forEach( (engineObject) => {
 			engineObject.update();
 		});
+		//this.updateHelpers();
 
 		renderer.render(scene, camera);
 	}
@@ -71264,6 +71520,12 @@ class ThreeEngine {
 		}
 	}
 
+	updateHelpers () {
+		this.helpers.forEach( (helper) => {
+			if( helper.name === 'Helper' ) helper.updateMatrixWorld();
+		});
+	}
+
 	getObject (gameObject) {
 		return this.objects.get(gameObject);
 	}
@@ -71286,21 +71548,6 @@ class ThreeEngine {
 		return true;
 	}
 
-	addBoundingBoxHelper (model, object) {
-		let box = new three__WEBPACK_IMPORTED_MODULE_5__["Box3"]().setFromObject( model );
-		let helper = new three__WEBPACK_IMPORTED_MODULE_5__["Box3Helper"](box, 0xffff00);
-		// noinspection JSUndefinedPropertyAssignment
-		helper.name = 'Helper';
-		object.add(helper);
-
-		if( !this.helpersActive )
-			{ // noinspection JSUndefinedPropertyAssignment
-				helper.visible = false;
-			}
-		this.helpers.add(helper);
-
-	}
-
 	loadFloor (gameScene) {
 		const textureLoader = new three__WEBPACK_IMPORTED_MODULE_5__["TextureLoader"](this.loading.manager);
 
@@ -71311,23 +71558,45 @@ class ThreeEngine {
 		});
 		let floor = new three__WEBPACK_IMPORTED_MODULE_5__["Mesh"](
 			new three__WEBPACK_IMPORTED_MODULE_5__["PlaneBufferGeometry"](gameScene.width, gameScene.depth),
-			new three__WEBPACK_IMPORTED_MODULE_5__["MeshBasicMaterial"]({map:texture, color: 0xffffff, opacity: 0.5, transparent: true})
+			new three__WEBPACK_IMPORTED_MODULE_5__["MeshBasicMaterial"]({map:texture, color: 0xffffff, opacity: 0.5, transparent: false})
 		);
-		floor.position.y = -0.5;
 		floor.rotation.x = -Math.PI / 2;
 
 		return floor;
 	}
 
-	addObject2Scene (unit, model, gameObject, position) {
-		console.log('ThreeEngine.addObject2Scene', unit, model, gameObject, position);
+	addBoundingBoxHelper (unit) {
+		// Get bounding box
+		let box = new three__WEBPACK_IMPORTED_MODULE_5__["Box3"]().setFromObject( unit.object );
+		// Now we know sizes of unit group object
+		let size = box.getSize(new three__WEBPACK_IMPORTED_MODULE_5__["Vector3"]());
+		// Local center of unit object - we must correct Y positioin bcoz object is translated by Y on half of his size
+		let objectCenter = new three__WEBPACK_IMPORTED_MODULE_5__["Vector3"](0, size.y/2, 0);
+		// Translate Bbox to center and scale fir to unit object
+		box.setFromCenterAndSize(objectCenter, size);
+		// Create a helper
+		let helper = new three__WEBPACK_IMPORTED_MODULE_5__["Box3Helper"](box, unit.gameObject.color);
+		// noinspection JSUndefinedPropertyAssignment
+		helper.name = 'Helper';
+		// Bind helper to object, not to scene - now helper can repeat all object moves and rotates
+		unit.object.add(helper);
+
+		if( !this.helpersActive )
+		{ // noinspection JSUndefinedPropertyAssignment
+			helper.visible = false;
+		}
+		this.helpers.set(unit, helper);
+	}
+
+	addObject2Scene (unit) {
+		console.log('ThreeEngine.addObject2Scene', unit);
 		let {scene} = this.tools;
 
-		this.addBoundingBoxHelper(unit.model, unit.object);
-		unit.object.name = gameObject.title;
+		this.addBoundingBoxHelper(unit);
+		unit.object.name = unit.gameObject.title;
 		scene.add(unit.object);
-		unit.initPhysics(gameObject);
-		this.objects.set(gameObject, unit);
+		unit.initPhysics(unit.gameObject);
+		this.objects.set(unit.gameObject, unit);
 
 
 		return true;
@@ -71339,9 +71608,7 @@ class ThreeEngine {
 		// Game events
 		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on( 'GameScene.Init', gameScene => this.setupScene(gameScene) );
 		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on( 'GameScene.addObject', (gameObject, position) => this.addObject(gameObject, position) );
-		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on('ThreeEngineUnit.SuccessInit', (unit, model, gameObject, position) => {
-			this.addObject2Scene(unit, model, gameObject, position);
-		});
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].on('ThreeEngineUnit.SuccessInit', unit => this.addObject2Scene(unit) );
 
 		// Browser events
 		window.addEventListener('resize', () => this.resizeGame() );
@@ -71482,6 +71749,7 @@ class Unit {
 		this.object = null;
 		this.model = null;
 		this.body = null;
+		this.gameObject = null;
 		this.ani = {
 			mixer: null,
 			clips: [],
@@ -71490,19 +71758,12 @@ class Unit {
 	}
 
 	loadModel (modelFile, gameObject, position, onSuccessLoadModelCallback = undefined) {
-		let type = undefined;
+		let file = modelFile.file || modelFile;
+		let type = modelFile.type;
 
-		if( modelFile instanceof String ) {
-			let type = undefined;
-		}
-		else if( modelFile instanceof Object ) {
-			let {file: modelFile, type} = modelFile;
-		}
+		if( !type )
+			type = _Utils__WEBPACK_IMPORTED_MODULE_4__["getFileExtension"](modelFile);
 
-		if( !type ) {
-			let ext = _Utils__WEBPACK_IMPORTED_MODULE_4__["getFileExtension"](modelFile);
-			type = ext;
-		}
 		let loader, callback;
 		switch( type ) {
 			case 'gltf':
@@ -71545,14 +71806,15 @@ class Unit {
 	}
 
 	init (model, gameObject, position) {
-		console.log('Unit.init', model, gameObject, position);
+		this.gameObject = gameObject;
+
 		this.initObject3dFromModel(model)
 			.scaleModelTo(1)
 			.initPosition(position)
 			.initAni(model)
 			//.initPhysics(gameObject)
 		;
-		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger('ThreeEngineUnit.SuccessInit', this, model, gameObject, position);
+		_Game_js__WEBPACK_IMPORTED_MODULE_0__["Event"].trigger('ThreeEngineUnit.SuccessInit', this);
 		return this;
 	}
 
@@ -71568,15 +71830,18 @@ class Unit {
 	scaleModelTo (scaleTo = 2) {
 		// rescale model - fit it to 2 meters height
 		let box = new three__WEBPACK_IMPORTED_MODULE_2__["Box3"]().setFromObject( this.model );
-		let optimalScaleFoThisModel = scaleTo/box.max.y;
+		let optimalScaleFoThisModel = scaleTo / this.getModelSize().y;
 		this.model.scale.multiplyScalar(optimalScaleFoThisModel);
 		return this;
 	}
 
+	getModelSize () { return new three__WEBPACK_IMPORTED_MODULE_2__["Box3"]().setFromObject( this.model ).getSize(); }
+	getObjectSize () { return new three__WEBPACK_IMPORTED_MODULE_2__["Box3"]().setFromObject( this.object ).getSize(); }
+
 	initPosition (position) {
 		this.object
 			.translateX(position.x)
-			.translateY(position.y-0.5)
+			.translateY(this.getObjectSize().y/2)
 			.translateZ(position.z);
 		return this;
 	}

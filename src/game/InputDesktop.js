@@ -24,7 +24,16 @@ export default class InputDesktop {
 	}
 
 	static onMouseMove (event) {
+		event.preventDefault();
 		Event.trigger("InputDesktop.MouseMove", event);
+	}
+	static onMouseDown (event) {
+		event.preventDefault();
+		Event.trigger("InputDesktop.MouseDown", event);
+	}
+	static onMouseUp (event) {
+		event.preventDefault();
+		Event.trigger("InputDesktop.MouseUp", event);
 	}
 
 	static keyName(keyCode ) {
