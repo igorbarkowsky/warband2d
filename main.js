@@ -71151,14 +71151,21 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 
 		const direction = _InputDesktop_js__WEBPACK_IMPORTED_MODULE_4__["default"].moveKeys[key];
 		if( this.moves[direction] !== undefined )
-			return false;
+			return true;
 
 		this.moves[direction] = true;
 
-		//TODO: We can start tween motion or animation here
-		this.animationCrossfade(this.ani.actions.idle, this.ani.actions.run, 2);
+		// Another keys pressed too - we do not switch animation
+		if( this.movesQnty() > 1 ) {
+			return true;
+		}
+		else {
+			// We can start tween motion or animation here
+			//TODO: Fix incorrect animation
+			this.animationCrossfade(this.ani.actions.idle, this.ani.actions.run, 2);
 
-		return true;
+			return true;
+		}
 	}
 
 	onMoveEnd (event) {
@@ -71170,19 +71177,25 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 		if( this.moves[direction] !== undefined )
 			delete this.moves[direction];
 
-		if( this.hasMoves() )
+		// Another keys pressed too - we do not switch animation and do not stop player
+		if( this.hasMoves() ) {
 			return true;
+		}
+		else {
+			// Reset speed modifier
+			this.speedModifier = 0;
 
-		// Reset speed modifier
-		this.speedModifier = 0;
-
-		//TODO: We can stop tween motion or animation here
-		this.animationCrossfade(this.ani.actions.run, this.ani.actions.idle, this.engine.delta*30);
-		return true;
+			this.animationCrossfade(this.ani.actions.run, this.ani.actions.idle, this.engine.delta*30);
+			return true;
+		}
 	}
 
 	hasMoves () {
-		return ( Object.keys(this.moves).length > 0 );
+		return ( this.movesQnty() > 0 );
+	}
+
+	movesQnty () {
+		return Object.keys(this.moves).length;
 	}
 
 	update () {
@@ -71211,6 +71224,7 @@ class Player extends _Troop_js__WEBPACK_IMPORTED_MODULE_3__["default"] {
 		let moveDirection = new cannon__WEBPACK_IMPORTED_MODULE_2__["Vec3"](directionVector.x,
 			directionVector.y,
 			directionVector.z);
+		moveDirection.normalize();
 		// Convert local to world vector
 		let worldDirection = this.body.vectorToWorldFrame(moveDirection);
 

@@ -85,14 +85,21 @@ export default class Player extends Troop {
 
 		const direction = InputDesktop.moveKeys[key];
 		if( this.moves[direction] !== undefined )
-			return false;
+			return true;
 
 		this.moves[direction] = true;
 
-		//TODO: We can start tween motion or animation here
-		this.animationCrossfade(this.ani.actions.idle, this.ani.actions.run, 2);
+		// Another keys pressed too - we do not switch animation
+		if( this.movesQnty() > 1 ) {
+			return true;
+		}
+		else {
+			// We can start tween motion or animation here
+			//TODO: Fix incorrect animation
+			this.animationCrossfade(this.ani.actions.idle, this.ani.actions.run, 2);
 
-		return true;
+			return true;
+		}
 	}
 
 	onMoveEnd (event) {
@@ -104,19 +111,25 @@ export default class Player extends Troop {
 		if( this.moves[direction] !== undefined )
 			delete this.moves[direction];
 
-		if( this.hasMoves() )
+		// Another keys pressed too - we do not switch animation and do not stop player
+		if( this.hasMoves() ) {
 			return true;
+		}
+		else {
+			// Reset speed modifier
+			this.speedModifier = 0;
 
-		// Reset speed modifier
-		this.speedModifier = 0;
-
-		//TODO: We can stop tween motion or animation here
-		this.animationCrossfade(this.ani.actions.run, this.ani.actions.idle, this.engine.delta*30);
-		return true;
+			this.animationCrossfade(this.ani.actions.run, this.ani.actions.idle, this.engine.delta*30);
+			return true;
+		}
 	}
 
 	hasMoves () {
-		return ( Object.keys(this.moves).length > 0 );
+		return ( this.movesQnty() > 0 );
+	}
+
+	movesQnty () {
+		return Object.keys(this.moves).length;
 	}
 
 	update () {
@@ -145,6 +158,7 @@ export default class Player extends Troop {
 		let moveDirection = new CANNON.Vec3(directionVector.x,
 			directionVector.y,
 			directionVector.z);
+		moveDirection.normalize();
 		// Convert local to world vector
 		let worldDirection = this.body.vectorToWorldFrame(moveDirection);
 
