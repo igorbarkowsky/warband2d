@@ -1,19 +1,23 @@
 "use strict";
 
 import {Event} from "./../Game.js";
-import {KeyboardHelper as KeyboardState} from "./../KeyboardHelper.js";
 import Input from "./../Input.js";
 import img from "./../img/Tile_Floor_texture.png";
 import Canvas2Image from "./../tools/canvas2image.js";
 
 import * as THREE from "three";
 import * as CANNON from "cannon";
-import GLTFLoader from "three-gltf-loader";
+import TextSprite from 'three.textsprite';
+import Chance from 'chance';
+
+// Instantiate Chance so it can be used
+var chance = new Chance();
 
 import Troop from './Troop.js';
 import Player from './Player.js';
 
 import * as Utils from './../Utils.js';
+
 
 export class ThreeEngine {
 	constructor() {
@@ -22,6 +26,7 @@ export class ThreeEngine {
 		this.physics = {};
 		// scene, camera and renderer
 		this.tools = {};
+		this.hud = {};
 
 		// Player tools
 		this.playerGameObject = null;
@@ -69,17 +74,70 @@ export class ThreeEngine {
 		this.loading = {RESOURCES_LOADED, screen, manager};
 	}
 
+	initHUD () {
+		// We will use 2D canvas element to render our HUD.
+		let hudCanvas = document.createElement('canvas');
+
+		// Again, set dimensions to fit the screen.
+		hudCanvas.width = window.innerWidth;
+		hudCanvas.height = window.innerHeight;
+
+		// Get 2D context and draw something supercool.
+		var hudBitmap = hudCanvas.getContext('2d');
+		hudBitmap.font = "Normal 20px Arial";
+		hudBitmap.textAlign = 'center';
+		hudBitmap.fillStyle = "white";
+		let helpText = 'Click to start game. Press H for toggle helpers. Press R for save screenshot';
+		let lineHeight = 25;
+		this.wrapText(hudBitmap, helpText, hudCanvas.width / 2, 100, hudCanvas.width / 2, lineHeight);
+		//hudBitmap.fillText(, hudCanvas.width / 2, hudCanvas.height / 2);
+
+		// Create the camera and set the viewport to match the screen dimensions.
+		let cameraHUD = new THREE.OrthographicCamera(
+			-hudCanvas.width/2, hudCanvas.width/2,
+			hudCanvas.height/2, -hudCanvas.height/2,
+			0, 30
+		);
+
+		// Create also a custom scene for HUD.
+		let sceneHUD = new THREE.Scene();
+
+		// Create texture from rendered graphics.
+		let hudTexture = new THREE.Texture(hudCanvas)
+		hudTexture.needsUpdate = true;
+
+		// Create HUD material.
+		let material = new THREE.MeshBasicMaterial( {map: hudTexture} );
+		material.transparent = true;
+
+		// Create plane to render the HUD. This plane fill the whole screen.
+		let planeGeometry = new THREE.PlaneGeometry( hudCanvas.width, hudCanvas.height );
+		let plane = new THREE.Mesh( planeGeometry, material );
+		sceneHUD.add( plane );
+
+		this.hud = Object.freeze({scene: sceneHUD, camera: cameraHUD});
+		console.log(this.hud);
+	}
+
+	updateHUD () {
+		// Update HUD graphics.
+		// hudBitmap.clearRect(0, 0, width, height);
+		// hudBitmap.fillText("RAD [x:"+(cube.rotation.x % (2 * Math.PI)).toFixed(1)+", y:"+(cube.rotation.y % (2 * Math.PI)).toFixed(1)+", z:"+(cube.rotation.z % (2 * Math.PI)).toFixed(1)+"]" , width / 2, height / 2);
+		// hudTexture.needsUpdate = true;
+	}
+
 	initTools () {
 		let renderer, scene, camera, kbd;
-		kbd = new KeyboardState();
 		scene = new THREE.Scene();
-		camera = new THREE.PerspectiveCamera();
+		camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1/128, 1000);
 		renderer = new THREE.WebGLRenderer({
 			antialias: true,
 			powerPreference: 'high-performance',
-			preserveDrawingBuffer: true,// for screenshots by pressing R
+			//preserveDrawingBuffer: true,// for screenshots by pressing R
 		});
-		this.tools = Object.freeze({renderer, scene, camera, kbd});
+		renderer.autoClear = false;
+		//renderer.setClearColor(0x000000, 1);
+		this.tools = Object.freeze({renderer, scene, camera});
 	}
 
 	showLoadingScreen () {
@@ -136,12 +194,21 @@ export class ThreeEngine {
 			scene.add(Axes);
 		}
 
+		this.addCoordHelper(new THREE.Vector3(0,0,0));
+		for( let i = 3, max = 30; i < max; i += 3)
+			this.addCoordHelper(new THREE.Vector3(i,0,0));
+		for( let i = 3, max = 30; i < max; i += 3)
+			this.addCoordHelper(new THREE.Vector3(0,0,i));
+
+		// this.addText('H for toggle helpers');
+
 		// camera view position
 		// camera.position.set(-10, 50, -10);
 		// camera.lookAt(0, 0, 0);
 
 		let floor = this.loadFloor(gameScene);
 		scene.add(floor);
+		this.initHUD();
 
 		this.initPhysics();
 		// Start clock sync
@@ -167,12 +234,12 @@ export class ThreeEngine {
 		this.delta = this.clock.getDelta();
 
 		this.updatePhysics();
-		this.objects.forEach( (engineObject) => {
-			engineObject.update();
-		});
+		this.updateObjects();
 		//this.updateHelpers();
+		this.updateHUD();
 
 		renderer.render(scene, camera);
+		renderer.render(this.hud.scene, this.hud.camera);
 	}
 
 	initPhysics () {
@@ -207,6 +274,12 @@ export class ThreeEngine {
 				engineObject.object.quaternion.copy(engineObject.body.quaternion);
 			});
 		}
+	}
+
+	updateObjects () {
+		this.objects.forEach( (engineObject) => {
+			engineObject.update();
+		});
 	}
 
 	updateHelpers () {
@@ -254,9 +327,43 @@ export class ThreeEngine {
 		return floor;
 	}
 
-	addBoundingBoxHelper (unit) {
-		// Get bounding box
-		let box = new THREE.Box3().setFromObject( unit.object );
+	addText (sometext) {
+		let {camera} = this.tools;
+		let sprite = new TextSprite({
+			textSize: 0.05,
+			redrawInterval: 1,
+			texture: {
+				text: sometext,
+				fontFamily: 'sans-serif',
+			},
+			material: {color: 'red'},
+		});
+
+		camera.add( sprite );
+		sprite.position.set(0,1,-3);
+		camera.updateProjectionMatrix();
+	}
+
+	addCoordHelper (position) {
+		let {scene} = this.tools;
+		let sphere = new THREE.SphereGeometry(0.1);
+		let object = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( 0xff0000 ) );
+		let helper = new THREE.BoxHelper( object, 0xffff00 );
+
+		helper.name = 'Helper';
+		scene.add( object );
+		object.add( helper );
+		object.position.set(position.x, position.y+object.geometry.parameters.radius, position.z);
+
+		if( !this.helpersActive )
+		{ // noinspection JSUndefinedPropertyAssignment
+			helper.visible = false;
+		}
+		this.helpers.set(object, helper);
+	}
+
+	addBoxHelper (object, color) {
+		let box = new THREE.Box3().setFromObject( object );
 		// Now we know sizes of unit group object
 		let size = box.getSize(new THREE.Vector3());
 		// Local center of unit object - we must correct Y positioin bcoz object is translated by Y on half of his size
@@ -264,17 +371,21 @@ export class ThreeEngine {
 		// Translate Bbox to center and scale fir to unit object
 		box.setFromCenterAndSize(objectCenter, size);
 		// Create a helper
-		let helper = new THREE.Box3Helper(box, unit.gameObject.color);
+		let helper = new THREE.Box3Helper(box, color);
 		// noinspection JSUndefinedPropertyAssignment
 		helper.name = 'Helper';
 		// Bind helper to object, not to scene - now helper can repeat all object moves and rotates
-		unit.object.add(helper);
+		object.add(helper);
 
 		if( !this.helpersActive )
 		{ // noinspection JSUndefinedPropertyAssignment
 			helper.visible = false;
 		}
-		this.helpers.set(unit, helper);
+		this.helpers.set(object, helper);
+	}
+
+	addBoundingBoxHelper (unit) {
+		return this.addBoxHelper(unit.object, unit.gameObject.color);
 	}
 
 	addObject2Scene (unit) {
@@ -375,5 +486,25 @@ export class ThreeEngine {
 
 		this.helpersActive = !this.helpersActive;
 		this.helpers.forEach( object3D => object3D.visible = this.helpersActive );
+	}
+
+	wrapText (context, text, x, y, maxWidth, lineHeight) {
+		let words = text.split(' ');
+		let line = '';
+
+		for( let n = 0; n < words.length; n++ ) {
+			let testLine = line + words[n] + ' ';
+			let metrics = context.measureText(testLine);
+			let testWidth = metrics.width;
+			if (testWidth > maxWidth && n > 0) {
+				context.fillText(line, x, y);
+				line = words[n] + ' ';
+				y += lineHeight;
+			}
+			else {
+				line = testLine;
+			}
+		}
+		context.fillText(line, x, y);
 	}
 }

@@ -161,6 +161,8 @@ export default class Player extends Troop {
 		moveDirection.normalize();
 		// Convert local to world vector
 		let worldDirection = this.body.vectorToWorldFrame(moveDirection);
+		let distance = worldDirection.length();
+		//console.log(distance);
 
 		// calculate distance for single player move in one frame
 		//TODO: It related to outfit weight, agility and other player stats
