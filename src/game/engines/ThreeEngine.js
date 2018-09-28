@@ -10,9 +10,6 @@ import * as CANNON from "cannon";
 import TextSprite from 'three.textsprite';
 import Chance from 'chance';
 
-// Instantiate Chance so it can be used
-var chance = new Chance();
-
 import Troop from './Troop.js';
 import Player from './Player.js';
 
@@ -34,6 +31,7 @@ export class ThreeEngine {
 		// Helpers
 		this.helpersActive = true;
 		this.helpers = new Map();
+		this.chance = new Chance();
 
 		this.pointerLockRequested = false;
 		this.initLoading();
@@ -76,54 +74,54 @@ export class ThreeEngine {
 
 	initHUD () {
 		// We will use 2D canvas element to render our HUD.
-		let hudCanvas = document.createElement('canvas');
+		let canvas = document.createElement('canvas');
 
 		// Again, set dimensions to fit the screen.
-		hudCanvas.width = window.innerWidth;
-		hudCanvas.height = window.innerHeight;
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
 
 		// Get 2D context and draw something supercool.
-		var hudBitmap = hudCanvas.getContext('2d');
-		hudBitmap.font = "Normal 20px Arial";
-		hudBitmap.textAlign = 'center';
-		hudBitmap.fillStyle = "white";
-		let helpText = 'Click to start game. Press H for toggle helpers. Press R for save screenshot';
+		var context = canvas.getContext('2d');
+		context.font = "Normal 20px Arial";
+		context.textAlign = 'center';
+		context.fillStyle = "white";
+		let helpText = 'Click to start game. Press H for toggle outlines.';
 		let lineHeight = 25;
-		this.wrapText(hudBitmap, helpText, hudCanvas.width / 2, 100, hudCanvas.width / 2, lineHeight);
-		//hudBitmap.fillText(, hudCanvas.width / 2, hudCanvas.height / 2);
+		this.wrapText(context, helpText, canvas.width / 2, lineHeight, canvas.width / 2, lineHeight);
 
 		// Create the camera and set the viewport to match the screen dimensions.
-		let cameraHUD = new THREE.OrthographicCamera(
-			-hudCanvas.width/2, hudCanvas.width/2,
-			hudCanvas.height/2, -hudCanvas.height/2,
+		let camera = new THREE.OrthographicCamera(
+			-canvas.width/2, canvas.width/2,
+			canvas.height/2, -canvas.height/2,
 			0, 30
 		);
 
 		// Create also a custom scene for HUD.
-		let sceneHUD = new THREE.Scene();
+		let scene = new THREE.Scene();
 
 		// Create texture from rendered graphics.
-		let hudTexture = new THREE.Texture(hudCanvas)
-		hudTexture.needsUpdate = true;
+		let texture = new THREE.Texture(canvas);
+		texture.needsUpdate = true;
 
 		// Create HUD material.
-		let material = new THREE.MeshBasicMaterial( {map: hudTexture} );
+		let material = new THREE.MeshBasicMaterial( {map: texture} );
 		material.transparent = true;
 
 		// Create plane to render the HUD. This plane fill the whole screen.
-		let planeGeometry = new THREE.PlaneGeometry( hudCanvas.width, hudCanvas.height );
+		let planeGeometry = new THREE.PlaneGeometry( canvas.width, canvas.height );
 		let plane = new THREE.Mesh( planeGeometry, material );
-		sceneHUD.add( plane );
+		scene.add( plane );
 
-		this.hud = Object.freeze({scene: sceneHUD, camera: cameraHUD});
-		console.log(this.hud);
+		this.hud = Object.freeze({scene, camera, objects: {context, texture}});
+		console.log('HUD inited', this.hud);
 	}
 
 	updateHUD () {
 		// Update HUD graphics.
-		// hudBitmap.clearRect(0, 0, width, height);
-		// hudBitmap.fillText("RAD [x:"+(cube.rotation.x % (2 * Math.PI)).toFixed(1)+", y:"+(cube.rotation.y % (2 * Math.PI)).toFixed(1)+", z:"+(cube.rotation.z % (2 * Math.PI)).toFixed(1)+"]" , width / 2, height / 2);
-		// hudTexture.needsUpdate = true;
+		// let {context: ctx, texture} = this.hud.objects;
+		// ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+		// ctx.fillText(Date.now() , window.innerWidth / 2, 100);
+		// texture.needsUpdate = true;
 	}
 
 	initTools () {
@@ -200,7 +198,7 @@ export class ThreeEngine {
 		for( let i = 3, max = 30; i < max; i += 3)
 			this.addCoordHelper(new THREE.Vector3(0,0,i));
 
-		// this.addText('H for toggle helpers');
+		this.addText('Text');
 
 		// camera view position
 		// camera.position.set(-10, 50, -10);
@@ -328,7 +326,7 @@ export class ThreeEngine {
 	}
 
 	addText (sometext) {
-		let {camera} = this.tools;
+		let {scene} = this.tools;
 		let sprite = new TextSprite({
 			textSize: 0.05,
 			redrawInterval: 1,
@@ -339,9 +337,8 @@ export class ThreeEngine {
 			material: {color: 'red'},
 		});
 
-		camera.add( sprite );
+		scene.add( sprite );
 		sprite.position.set(0,1,-3);
-		camera.updateProjectionMatrix();
 	}
 
 	addCoordHelper (position) {
@@ -427,12 +424,14 @@ export class ThreeEngine {
 
 	resizeGame () {
 		let {renderer, camera} = this.tools;
+		let {camera: hudCamera} = this.hud;
 
 		let aspectRatio = window.innerWidth / window.innerHeight;
-
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		camera.aspect = aspectRatio;
 		camera.updateProjectionMatrix();
+		hudCamera.aspect = aspectRatio;
+		hudCamera.updateProjectionMatrix();
 	}
 
 	requestPointerLock () {
@@ -450,7 +449,7 @@ export class ThreeEngine {
 			console.log('Pointer has locked by game');
 			// Enable interacting with Game world
 			Input.enable(renderer);
-			document.addEventListener("keydown",  this.takeScreenshotHandler, true);
+			// document.addEventListener("keydown",  this.takeScreenshotHandler, true);
 			document.addEventListener("keydown",  this.toggleHelpersHandler, true);
 
 			// this.Keyboard('w, a, s, d', 'gameScene', this.animatePlayerHandler);
@@ -462,7 +461,7 @@ export class ThreeEngine {
 			console.log('Pointer released');
 			// Disable interacting with Game world
 			Input.disable(renderer);
-			document.removeEventListener("keydown",  this.takeScreenshotHandler, true);
+			// document.removeEventListener("keydown",  this.takeScreenshotHandler, true);
 			document.removeEventListener("keydown",  this.toggleHelpersHandler, true);
 
 			// this.Keyboard.deleteScope('gameScene');
